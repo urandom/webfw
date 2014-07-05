@@ -18,10 +18,7 @@ type Server struct {
 // NewServer creates a server with an optional path to a
 // configuration file.
 func NewServer(confpath ...string) *Server {
-	var conf Config
-	var err error
-
-	conf, err = ReadConfig(confpath[0])
+	conf, err := ReadConfig(confpath...)
 
 	if err != nil {
 		panic(err)
