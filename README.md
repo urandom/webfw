@@ -58,16 +58,16 @@ A quick example, straight from the docs:
 2. The templates, in a directory "templates"
 
     2.1 "base.tmpl":
-        ```html
+    ```html
         <!doctype html>
         <html>
         <body>{{ template "content" . }}</body>
         </html>
         {{ define "content" }}{{ end }}
-        ```
+    ```
     2.2 "hello.tmpl"
-        ```html
+    ```html
         {{ define "content" }}
         <h1>Hello {{ .name }}</h1>
         {{ end }}
-        ```
+    ```
