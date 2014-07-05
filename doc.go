@@ -24,5 +24,8 @@ Some of the provided features are:
 
     * A helper renderer utility that caches html/template chains and
       provides context data for the Dot
+
+Since webfw uses sync.Pool internally, it currently requires go1.3 as
+its lowest supported version.
 */
 package webfw
