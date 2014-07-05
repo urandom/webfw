@@ -1,0 +1,7 @@
+{{ define "content" }}
+[content: test1]
+{{ template "inner" . }}
+[ctx: {{ .ctx.test }}]
+[base: {{ .base.test }}]
+{{ end }}
+{{ define "inner" }}{{ end }}

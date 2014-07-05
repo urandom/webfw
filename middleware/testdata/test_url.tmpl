@@ -1,0 +1,16 @@
+{{ define "content" }}
+[url1: {{ url "/foo/bar" .base.r }}]
+[url2: {{ localizedUrl "/foo/bar" "de" .base.r }}]
+[url3: {{ url "/alpha/:here:/beta" .base.r }}]
+[url4: {{ localizedUrl "/alpha/:here:/beta" "de" .base.r }}]
+[url5: {{ url "test/1" .base.r }}]
+[url6: {{ localizedUrl "test/2" "de" .base.r }}]
+[url7: {{ url ":here:/beta" .base.r }}]
+[url8: {{ localizedUrl ":here:/beta" "de" .base.r }}]
+[url9: {{ url ":here:/beta/:here:" .base.r }}]
+[url10: {{ localizedUrl ":here:/beta/:here:" "de" .base.r }}]
+[url11: {{ url "" .base.r }}]
+[url12: {{ localizedUrl "" "de" .base.r }}]
+[url13: {{ url "/foo" "bar=baz" "alpha=:here:" .base.r }}]
+[url14: {{ localizedUrl "/foo" "bar=baz" "alpha=:here:" "de" .base.r }}]
+{{ end }}
