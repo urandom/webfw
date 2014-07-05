@@ -2,10 +2,11 @@ package webfw_test
 
 import (
 	"net/http"
-	"webfw"
-	"webfw/context"
-	"webfw/controller"
-	"webfw/types"
+
+	"github.com/urandom/webfw"
+	"github.com/urandom/webfw/context"
+	"github.com/urandom/webfw/controller"
+	"github.com/urandom/webfw/types"
 )
 
 type Hello struct {
