@@ -6,9 +6,10 @@ import (
 	"log"
 	"net/http"
 	"strings"
-	"webfw/context"
-	"webfw/renderer"
-	"webfw/types"
+
+	"github.com/urandom/webfw/context"
+	"github.com/urandom/webfw/renderer"
+	"github.com/urandom/webfw/types"
 )
 
 /*

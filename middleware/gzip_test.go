@@ -8,7 +8,8 @@ import (
 	"net/http/httptest"
 	"os"
 	"testing"
-	"webfw/context"
+
+	"github.com/urandom/webfw/context"
 )
 
 func TestGzipHandler(t *testing.T) {

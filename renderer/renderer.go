@@ -15,9 +15,10 @@ import (
 	"path"
 	"strings"
 	"sync"
-	"webfw/context"
-	"webfw/types"
-	"webfw/util"
+
+	"github.com/urandom/webfw/context"
+	"github.com/urandom/webfw/types"
+	"github.com/urandom/webfw/util"
 )
 
 type Renderer struct {

@@ -6,7 +6,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"time"
-	"webfw/context"
+
+	"github.com/urandom/webfw/context"
 
 	"strings"
 )

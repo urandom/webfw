@@ -6,7 +6,8 @@ import (
 	"net/http/httptest"
 	"os"
 	"testing"
-	"webfw/context"
+
+	"github.com/urandom/webfw/context"
 )
 
 func TestContext(t *testing.T) {

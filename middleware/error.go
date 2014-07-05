@@ -5,7 +5,8 @@ import (
 	"log"
 	"net/http"
 	"runtime/debug"
-	"webfw/context"
+
+	"github.com/urandom/webfw/context"
 )
 
 // The Error middleware provides basic panic recovery for a request. For

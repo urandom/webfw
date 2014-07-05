@@ -2,7 +2,8 @@ package types
 
 import (
 	"net/http"
-	"webfw/context"
+
+	"github.com/urandom/webfw/context"
 )
 
 type Controller interface {

@@ -2,7 +2,8 @@ package webfw
 
 import (
 	"net/http"
-	"webfw/types"
+
+	"github.com/urandom/webfw/types"
 )
 
 type Route struct {

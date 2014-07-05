@@ -8,7 +8,8 @@ import (
 	"os"
 	"strings"
 	"testing"
-	"webfw/context"
+
+	"github.com/urandom/webfw/context"
 )
 
 func TestLogger(t *testing.T) {

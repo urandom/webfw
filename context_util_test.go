@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"net/http"
 	"testing"
-	"webfw/context"
-	"webfw/middleware"
-	"webfw/types"
+
+	"github.com/urandom/webfw/context"
+	"github.com/urandom/webfw/middleware"
+	"github.com/urandom/webfw/types"
 )
 
 func TestContextUtil(t *testing.T) {

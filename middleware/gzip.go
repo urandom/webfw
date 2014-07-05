@@ -5,8 +5,9 @@ import (
 	"log"
 	"net/http"
 	"net/http/httptest"
-	"webfw/context"
-	"webfw/util"
+
+	"github.com/urandom/webfw/context"
+	"github.com/urandom/webfw/util"
 
 	"strconv"
 	"strings"

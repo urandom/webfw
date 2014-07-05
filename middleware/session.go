@@ -8,9 +8,10 @@ import (
 	"path"
 	"path/filepath"
 	"time"
-	"webfw/context"
-	"webfw/types"
-	"webfw/util"
+
+	"github.com/urandom/webfw/context"
+	"github.com/urandom/webfw/types"
+	"github.com/urandom/webfw/util"
 )
 
 /*

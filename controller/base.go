@@ -7,7 +7,7 @@
 // implementations.
 package controller
 
-import "webfw/types"
+import "github.com/urandom/webfw/types"
 
 type Base struct {
 	pattern string

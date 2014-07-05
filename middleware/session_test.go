@@ -9,8 +9,9 @@ import (
 	"strings"
 	"testing"
 	"time"
-	"webfw/context"
-	"webfw/types"
+
+	"github.com/urandom/webfw/context"
+	"github.com/urandom/webfw/types"
 )
 
 var secret = []byte("test")

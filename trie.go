@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"net/url"
 	"strings"
-	"webfw/types"
+
+	"github.com/urandom/webfw/types"
 )
 
 // Trie is an object that stores routes in a prefix tree, and allows for

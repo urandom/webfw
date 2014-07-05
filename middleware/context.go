@@ -3,7 +3,8 @@ package middleware
 import (
 	"log"
 	"net/http"
-	"webfw/context"
+
+	"github.com/urandom/webfw/context"
 )
 
 // The Context middleware cleans up the framework context object of any data

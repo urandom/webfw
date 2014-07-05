@@ -3,7 +3,8 @@ package middleware
 import (
 	"log"
 	"net/http"
-	"webfw/context"
+
+	"github.com/urandom/webfw/context"
 )
 
 const dateFormat = "Jan 2, 2006 at 3:04pm (MST)"

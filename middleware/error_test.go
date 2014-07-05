@@ -7,7 +7,8 @@ import (
 	"os"
 	"strings"
 	"testing"
-	"webfw/context"
+
+	"github.com/urandom/webfw/context"
 )
 
 func TestErrorHandler(t *testing.T) {

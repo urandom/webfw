@@ -7,11 +7,12 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"webfw/context"
-	"webfw/middleware"
-	"webfw/renderer"
-	"webfw/types"
-	"webfw/util"
+
+	"github.com/urandom/webfw/context"
+	"github.com/urandom/webfw/middleware"
+	"github.com/urandom/webfw/renderer"
+	"github.com/urandom/webfw/types"
+	"github.com/urandom/webfw/util"
 )
 
 // GetConfig is a helper function for getting the current config

@@ -17,7 +17,8 @@ import (
 	"strings"
 	"sync"
 	"time"
-	"webfw/util"
+
+	"github.com/urandom/webfw/util"
 )
 
 var (

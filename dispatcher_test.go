@@ -5,8 +5,9 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"webfw/context"
-	"webfw/types"
+
+	"github.com/urandom/webfw/context"
+	"github.com/urandom/webfw/types"
 )
 
 func TestDispatcherIncorrectInit(t *testing.T) {

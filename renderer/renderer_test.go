@@ -5,8 +5,9 @@ import (
 	"html/template"
 	"strings"
 	"testing"
-	"webfw/context"
-	"webfw/types"
+
+	"github.com/urandom/webfw/context"
+	"github.com/urandom/webfw/types"
 )
 
 func TestRenderer(t *testing.T) {

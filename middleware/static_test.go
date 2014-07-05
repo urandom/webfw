@@ -14,7 +14,8 @@ import (
 	"strings"
 	"testing"
 	"time"
-	"webfw/context"
+
+	"github.com/urandom/webfw/context"
 )
 
 func TestStaticHandler(t *testing.T) {

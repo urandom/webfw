@@ -7,9 +7,10 @@ import (
 	"os"
 	"strings"
 	"testing"
-	"webfw/context"
-	"webfw/renderer"
-	"webfw/types"
+
+	"github.com/urandom/webfw/context"
+	"github.com/urandom/webfw/renderer"
+	"github.com/urandom/webfw/types"
 )
 
 func TestI18NHandler(t *testing.T) {

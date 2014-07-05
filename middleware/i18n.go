@@ -10,10 +10,11 @@ import (
 	"regexp"
 	"strings"
 	ttemplate "text/template"
-	"webfw/context"
-	"webfw/renderer"
-	"webfw/types"
-	"webfw/util"
+
+	"github.com/urandom/webfw/context"
+	"github.com/urandom/webfw/renderer"
+	"github.com/urandom/webfw/types"
+	"github.com/urandom/webfw/util"
 
 	"github.com/nicksnyder/go-i18n/i18n"
 	"github.com/nicksnyder/go-i18n/i18n/language"

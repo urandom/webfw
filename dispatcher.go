@@ -8,10 +8,11 @@ import (
 	"reflect"
 	"sort"
 	"strings"
-	"webfw/context"
-	"webfw/middleware"
-	"webfw/renderer"
-	"webfw/types"
+
+	"github.com/urandom/webfw/context"
+	"github.com/urandom/webfw/middleware"
+	"github.com/urandom/webfw/renderer"
+	"github.com/urandom/webfw/types"
 )
 
 // Dispatchers are responsible for calling controller handlers for a

@@ -11,8 +11,9 @@ import (
 	"os"
 	"path"
 	"time"
-	"webfw/context"
-	"webfw/util"
+
+	"github.com/urandom/webfw/context"
+	"github.com/urandom/webfw/util"
 
 	"sort"
 	"strings"
