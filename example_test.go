@@ -19,7 +19,7 @@ func NewHello(pattern string) Hello {
 func (con Hello) Handler(c *context.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		params := webfw.GetParams(c, r)
-		d := RenderData{name: params["name"]}
+		d := types.RenderData{"name": params["name"]}
 
 		err := webfw.GetRenderCtx(c, r)(w, d, "hello.tmpl")
 		if err != nil {
