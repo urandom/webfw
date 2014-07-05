@@ -9,7 +9,7 @@ A quick example, straight from the docs:
 
 1. The code
     ```go
-    package webfw_test
+    package main
     
     import (
     	"net/http"
