@@ -54,13 +54,20 @@ func NewDispatcher(pattern string, c Config) *Dispatcher {
 // If its name, derived from the type itself, is present within the
 // dispatcher's middleware configuration, it will be used in that position,
 // otherwise it will be added to the end of the chain, closest to the
-// controller handler.
+// controller handler. Middleware, supplied by webfw may also be registered
+// in this manner, if a more fine-grained configuration is desired.
 func (d *Dispatcher) RegisterMiddleware(mw middleware.Middleware) {
 	name := reflect.TypeOf(mw).Name()
 
-	fmt.Printf("%v\n", name)
 	d.middleware[name] = mw
 	d.middlewareOrder = append(d.middlewareOrder, name)
+}
+
+// SetContext allows for setting a different context implementation. This
+// should ideally be called before registering any controller, so that any
+// controller handler method is called with the new context.
+func (d *Dispatcher) SetContext(context types.Context) {
+	d.context = context
 }
 
 // ServeHTTP fulfills the net/http's Handler interface.
@@ -118,57 +125,57 @@ func (d *Dispatcher) init() {
 	middlewareInserted := make(map[string]bool)
 
 	for _, m := range d.config.Dispatcher.Middleware {
-		switch m {
-		case "Error":
-			mw = append(mw, middleware.Error{ShowStack: d.config.Server.Devel})
+		if custom, ok := d.middleware[m]; ok {
+			mw = append(mw, custom)
 			order = append(order, m)
-		case "Context":
-			mw = append(mw, middleware.Context{})
-			order = append(order, m)
-		case "Logger":
-			mw = append(mw, middleware.Logger{AccessLogger: log.New(os.Stdout, "", 0)})
-			order = append(order, m)
-		case "Gzip":
-			mw = append(mw, middleware.Gzip{})
-			order = append(order, m)
-		case "Static":
-			mw = append(mw, middleware.Static{
-				FileList: d.config.Static.FileList || d.config.Server.Devel,
-				Path:     d.config.Static.Dir,
-				Expires:  d.config.Static.Expires,
-				Prefix:   d.config.Static.Prefix,
-				Index:    d.config.Static.Index,
-			})
-			order = append(order, m)
-		case "Session":
-			mw = append(mw, middleware.Session{
-				Path:            d.config.Session.Dir,
-				Secret:          []byte(d.config.Session.Secret),
-				MaxAge:          d.config.Session.MaxAge,
-				CleanupInterval: d.config.Session.CleanupInterval,
-				CleanupMaxAge:   d.config.Session.CleanupMaxAge,
-			})
-			order = append(order, m)
-		case "I18N":
-			mw = append(mw, middleware.I18N{
-				Dir:             d.config.I18n.Dir,
-				Pattern:         d.pattern,
-				Languages:       d.config.I18n.Languages,
-				Renderer:        d.renderer,
-				IgnoreURLPrefix: d.config.I18n.IgnoreURLPrefix,
-			})
-			order = append(order, m)
-		case "Url":
-			mw = append(mw, middleware.Url{
-				Renderer: d.renderer,
-			})
-			order = append(order, m)
-		default:
-			if custom, ok := d.middleware[m]; ok {
-				mw = append(mw, custom)
-				order = append(order, m)
 
-				middlewareInserted[m] = true
+			middlewareInserted[m] = true
+		} else {
+			switch m {
+			case "Error":
+				mw = append(mw, middleware.Error{ShowStack: d.config.Server.Devel})
+				order = append(order, m)
+			case "Context":
+				mw = append(mw, middleware.Context{})
+				order = append(order, m)
+			case "Logger":
+				mw = append(mw, middleware.Logger{AccessLogger: log.New(os.Stdout, "", 0)})
+				order = append(order, m)
+			case "Gzip":
+				mw = append(mw, middleware.Gzip{})
+				order = append(order, m)
+			case "Static":
+				mw = append(mw, middleware.Static{
+					FileList: d.config.Static.FileList || d.config.Server.Devel,
+					Path:     d.config.Static.Dir,
+					Expires:  d.config.Static.Expires,
+					Prefix:   d.config.Static.Prefix,
+					Index:    d.config.Static.Index,
+				})
+				order = append(order, m)
+			case "Session":
+				mw = append(mw, middleware.Session{
+					Path:            d.config.Session.Dir,
+					Secret:          []byte(d.config.Session.Secret),
+					MaxAge:          d.config.Session.MaxAge,
+					CleanupInterval: d.config.Session.CleanupInterval,
+					CleanupMaxAge:   d.config.Session.CleanupMaxAge,
+				})
+				order = append(order, m)
+			case "I18N":
+				mw = append(mw, middleware.I18N{
+					Dir:             d.config.I18n.Dir,
+					Pattern:         d.pattern,
+					Languages:       d.config.I18n.Languages,
+					Renderer:        d.renderer,
+					IgnoreURLPrefix: d.config.I18n.IgnoreURLPrefix,
+				})
+				order = append(order, m)
+			case "Url":
+				mw = append(mw, middleware.Url{
+					Renderer: d.renderer,
+				})
+				order = append(order, m)
 			}
 		}
 	}
