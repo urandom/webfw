@@ -17,7 +17,7 @@ import (
 	"github.com/urandom/webfw/util"
 
 	"github.com/nicksnyder/go-i18n/i18n"
-	"github.com/nicksnyder/go-i18n/i18n/language"
+	lng "github.com/nicksnyder/go-i18n/i18n/language"
 )
 
 /*
@@ -158,6 +158,7 @@ func (imw I18N) Handler(ph http.Handler, c *context.Context, l *log.Logger) http
 			}
 
 			if !found && !foundShort {
+				c.Set(r, types.BaseCtxKey("lang"), "")
 				ph.ServeHTTP(w, r)
 				return
 			}
@@ -199,7 +200,7 @@ func FallbackLocale(c *context.Context, r *http.Request) string {
 		}
 	}
 
-	langs := language.Parse(r.Header.Get("Accept-Language"))
+	langs := lng.Parse(r.Header.Get("Accept-Language"))
 
 	if len(langs) > 0 {
 		return langs[0].String()
@@ -214,6 +215,11 @@ func FallbackLocale(c *context.Context, r *http.Request) string {
 
 	if language == "" {
 		language = "en"
+	} else {
+		langs := lng.Parse(language)
+		if len(langs) > 0 {
+			return langs[0].String()
+		}
 	}
 
 	return language

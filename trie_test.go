@@ -2,7 +2,8 @@ package webfw
 
 import (
 	"testing"
-	"webfw/types"
+
+	"github.com/urandom/webfw/types"
 )
 
 func TestAddRoute(t *testing.T) {
