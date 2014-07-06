@@ -28,7 +28,7 @@ type Dispatcher struct {
 	logger          *log.Logger
 	config          Config
 	renderer        *renderer.Renderer
-	middleware      map[string]middleware.Middleware
+	middleware      map[string]types.Middleware
 	middlewareOrder []string
 }
 
@@ -44,7 +44,7 @@ func NewDispatcher(pattern string, c Config) *Dispatcher {
 		pattern:    pattern,
 		context:    context.NewContext(),
 		logger:     log.New(os.Stderr, "", 0),
-		middleware: make(map[string]middleware.Middleware),
+		middleware: make(map[string]types.Middleware),
 	}
 
 	return d
@@ -56,7 +56,7 @@ func NewDispatcher(pattern string, c Config) *Dispatcher {
 // otherwise it will be added to the end of the chain, closest to the
 // controller handler. Middleware, supplied by webfw may also be registered
 // in this manner, if a more fine-grained configuration is desired.
-func (d *Dispatcher) RegisterMiddleware(mw middleware.Middleware) {
+func (d *Dispatcher) RegisterMiddleware(mw types.Middleware) {
 	name := reflect.TypeOf(mw).Name()
 
 	d.middleware[name] = mw
@@ -120,7 +120,7 @@ func (d *Dispatcher) handlerFunc() http.Handler {
 func (d *Dispatcher) init() {
 	d.renderer = renderer.NewRenderer(d.config.Renderer.Dir, d.config.Renderer.Base)
 
-	var mw []middleware.Middleware
+	var mw []types.Middleware
 	order := []string{}
 	middlewareInserted := make(map[string]bool)
 
@@ -185,7 +185,7 @@ func (d *Dispatcher) init() {
 	for _, name := range reverseOrder {
 		if !middlewareInserted[name] {
 			if custom, ok := d.middleware[name]; ok {
-				mw = append([]middleware.Middleware{custom}, mw...)
+				mw = append([]types.Middleware{custom}, mw...)
 				order = append([]string{name}, order...)
 			}
 		}
