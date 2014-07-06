@@ -16,7 +16,6 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/urandom/webfw/context"
 	"github.com/urandom/webfw/types"
 	"github.com/urandom/webfw/util"
 )
@@ -66,7 +65,7 @@ func (r *Renderer) Funcs(funcMap template.FuncMap) error {
 //   - "logger", the error logger
 //   - "firstTimer", if the session is newly created
 // The list of data is partially dependant on the middleware chain
-func (r *Renderer) Render(w io.Writer, data types.RenderData, cdata context.ContextData, names ...string) error {
+func (r *Renderer) Render(w io.Writer, data types.RenderData, cdata types.ContextData, names ...string) error {
 	var tmpl *template.Template
 
 	if len(names) == 0 {

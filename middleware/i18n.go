@@ -11,7 +11,6 @@ import (
 	"strings"
 	ttemplate "text/template"
 
-	"github.com/urandom/webfw/context"
 	"github.com/urandom/webfw/renderer"
 	"github.com/urandom/webfw/types"
 	"github.com/urandom/webfw/util"
@@ -69,7 +68,7 @@ type I18N struct {
 	IgnoreURLPrefix []string
 }
 
-func (imw I18N) Handler(ph http.Handler, c *context.Context, l *log.Logger) http.Handler {
+func (imw I18N) Handler(ph http.Handler, c types.Context, l *log.Logger) http.Handler {
 	for _, l := range imw.Languages {
 		i18n.MustLoadTranslationFile(filepath.Join(imw.Dir, l+".all.json"))
 	}
@@ -127,7 +126,7 @@ func (imw I18N) Handler(ph http.Handler, c *context.Context, l *log.Logger) http
 					found = true
 
 					if val, ok := c.Get(r, types.BaseCtxKey("session")); ok {
-						val.(*context.Session).Set("language", language)
+						val.(types.Session).Set("language", language)
 					} else {
 						l.Println("Session not found, unable to store current language")
 					}
@@ -191,9 +190,9 @@ func (imw I18N) Handler(ph http.Handler, c *context.Context, l *log.Logger) http
 
 var localeRegexp = regexp.MustCompile(`\.[\w\-]+$`)
 
-func FallbackLocale(c *context.Context, r *http.Request) string {
+func FallbackLocale(c types.Context, r *http.Request) string {
 	if val, ok := c.Get(r, types.BaseCtxKey("session")); ok {
-		sess := val.(*context.Session)
+		sess := val.(types.Session)
 
 		if language, ok := sess.Get("language"); ok {
 			return language.(string)

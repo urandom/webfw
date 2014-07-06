@@ -6,7 +6,6 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/urandom/webfw/context"
 	"github.com/urandom/webfw/types"
 )
 
@@ -175,7 +174,7 @@ type controller struct {
 	method  types.Method
 }
 
-func (cntl controller) Handler(c *context.Context) http.HandlerFunc {
+func (cntl controller) Handler(c types.Context) http.HandlerFunc {
 	return cntl.handler
 }
 
@@ -195,7 +194,7 @@ type MyCustomMW struct {
 	to string
 }
 
-func (mmw MyCustomMW) Handler(ph http.Handler, c *context.Context, l *log.Logger) http.Handler {
+func (mmw MyCustomMW) Handler(ph http.Handler, c types.Context, l *log.Logger) http.Handler {
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		r.URL.Path = mmw.to
 		c.Set(r, "foo", mmw.to)
@@ -209,7 +208,7 @@ type MyCustomMW2 struct {
 	to string
 }
 
-func (mmw MyCustomMW2) Handler(ph http.Handler, c *context.Context, l *log.Logger) http.Handler {
+func (mmw MyCustomMW2) Handler(ph http.Handler, c types.Context, l *log.Logger) http.Handler {
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		r.URL.Path = mmw.to
 		c.Set(r, "foo", mmw.to)

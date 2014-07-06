@@ -58,7 +58,8 @@ func TestI18NHandler(t *testing.T) {
 	r, _ = http.NewRequest("GET", "http://localhost:8080/en/", nil)
 	rec = httptest.NewRecorder()
 
-	s := context.NewSession("test1", []byte(""), os.TempDir())
+	s := context.NewSession([]byte(""), os.TempDir())
+	s.SetName("test1")
 	c.Set(r, types.BaseCtxKey("session"), s)
 	h.ServeHTTP(rec, r)
 

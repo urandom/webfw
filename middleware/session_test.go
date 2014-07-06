@@ -41,14 +41,15 @@ func TestSessionHandler(t *testing.T) {
 	var cookie string
 	if s, ok := c.Get(r, types.BaseCtxKey("session")); ok {
 		sess := s.(*context.Session)
-		if sess.MaxAge != time.Second {
-			t.Fatalf("Expected Session.Max to be '%s', got '%s'\n", time.Second, sess.MaxAge)
+		if sess.MaxAge() != time.Second {
+			t.Fatalf("Expected Session.MaxAge to be '%s', got '%s'\n", time.Second, sess.MaxAge())
 		}
 
-		sess.Write(rec)
+		if err := sess.Write(rec); err != nil {
+			t.Fatal(err)
+		}
 		sess.Set("foo", "bar")
 		cookie = rec.Header().Get("Set-Cookie")
-
 	} else {
 		t.Fatalf("Expected a new session")
 	}

@@ -6,13 +6,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/urandom/webfw/context"
 	"github.com/urandom/webfw/types"
 )
 
 func TestRenderer(t *testing.T) {
 	r := NewRenderer("testdata", "test.tmpl")
-	cd := context.ContextData{}
+	cd := types.ContextData{}
 
 	buf := new(bytes.Buffer)
 

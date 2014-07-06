@@ -35,7 +35,7 @@ type Session struct {
 	CleanupMaxAge   string
 }
 
-func (smw Session) Handler(ph http.Handler, c *context.Context, l *log.Logger) http.Handler {
+func (smw Session) Handler(ph http.Handler, c types.Context, l *log.Logger) http.Handler {
 	var abspath string
 	var maxAge, cleanupInterval, cleanupMaxAge time.Duration
 
@@ -86,26 +86,22 @@ func (smw Session) Handler(ph http.Handler, c *context.Context, l *log.Logger) h
 
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		firstTimer := false
-		sess, err := context.ReadSession(smw.Secret, abspath, r, c)
+		sess := context.NewSession(smw.Secret, abspath)
+		sess.SetMaxAge(maxAge)
 
-		if err != nil {
-			if err == context.ErrExpired {
-				sess.MaxAge = maxAge
-			} else {
+		err := sess.Read(r, c)
+
+		if err != nil && err != types.ErrExpired && err != types.ErrNotExist {
+			sess.SetName(util.UUID())
+			firstTimer = true
+
+			if err != types.ErrCookieNotExist {
 				l.Printf("Error reading session: %v", err)
 			}
 		}
 
-		if sess == nil {
-			sess = context.NewSession(util.UUID(), smw.Secret, abspath)
-			sess.MaxAge = maxAge
-			firstTimer = true
-		}
-
-		if sess != nil {
-			c.Set(r, types.BaseCtxKey("session"), sess)
-			c.Set(r, types.BaseCtxKey("firstTimer"), firstTimer)
-		}
+		c.Set(r, types.BaseCtxKey("session"), sess)
+		c.Set(r, types.BaseCtxKey("firstTimer"), firstTimer)
 
 		rec := httptest.NewRecorder()
 

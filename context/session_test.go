@@ -11,19 +11,22 @@ import (
 	"path/filepath"
 	"testing"
 	"time"
+
+	"github.com/urandom/webfw/types"
 )
 
 var secret = []byte("test")
 
 func TestSession(t *testing.T) {
-	s := NewSession("test1", secret, os.TempDir())
+	s := NewSession(secret, os.TempDir())
+	s.SetName("test1")
 
-	if s.Name != "test1" {
-		t.Fatalf("Expected the session name to be 'test1', got '%s'\n", s.Name)
+	if s.Name() != "test1" {
+		t.Fatalf("Expected the session name to be 'test1', got '%s'\n", s.Name())
 	}
 
-	if s.MaxAge != time.Hour {
-		t.Fatalf("Expected the session max-age to be a duration of 1h, got '%s'\n", s.MaxAge)
+	if s.MaxAge() != time.Hour {
+		t.Fatalf("Expected the session max-age to be a duration of 1h, got '%s'\n", s.MaxAge())
 	}
 
 	if s.Path != os.TempDir() {
@@ -34,24 +37,38 @@ func TestSession(t *testing.T) {
 	r, _ := http.NewRequest("GET", "http://localhost:8080", nil)
 	addCookie(t, "test2", r)
 
-	s2, err := ReadSession(secret, os.TempDir(), r, context)
+	s2 := NewSession(secret, os.TempDir())
+
+	err := s2.Read(r, context)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	temp, err := ReadSession(secret, os.TempDir(), r, context)
+	temp := NewSession(secret, os.TempDir())
+
+	err = temp.Read(r, context)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if temp != s2 {
+	if temp.Name() != s2.Name() {
+		t.Fatal()
+	}
+
+	if temp.MaxAge() != s2.MaxAge() {
+		t.Fatal()
+	}
+
+	if temp.CookieName() != s2.CookieName() {
 		t.Fatal()
 	}
 
 	r, _ = http.NewRequest("GET", "http://localhost:8080", nil)
 	addCookie(t, "test3", r)
 
-	if _, err := ReadSession(secret, os.TempDir(), r, nil); err != nil {
+	temp = NewSession(secret, os.TempDir())
+
+	if err = temp.Read(r, nil); err != nil && err != types.ErrExpired && err != types.ErrNotExist {
 		t.Fatal(err)
 	}
 
@@ -73,7 +90,8 @@ func TestSession(t *testing.T) {
 	r, _ = http.NewRequest("GET", "http://localhost:8080", nil)
 	addCookie(t, "test2", r)
 
-	s2, err = ReadSession(secret, os.TempDir(), r, context)
+	s2 = NewSession(secret, os.TempDir())
+	err = s2.Read(r, context)
 
 	if err != nil {
 		t.Fatal(err)
@@ -91,7 +109,8 @@ func TestSession(t *testing.T) {
 	addCookie(t, "test2", r)
 
 	/* Load from filesystem */
-	s2, err = ReadSession(secret, os.TempDir(), r, nil)
+	s2 = NewSession(secret, os.TempDir())
+	err = s2.Read(r, nil)
 
 	if err != nil {
 		t.Fatal(err)
@@ -153,15 +172,14 @@ func TestSession(t *testing.T) {
 }
 
 func TestCleanup(t *testing.T) {
-	var s *Session
-	var err error
-
 	root := filepath.Join(os.TempDir(), "/sessions/")
 
 	r, _ := http.NewRequest("GET", "http://localhost:8080", nil)
 	addCookie(t, "test1", r)
 
-	if s, err = ReadSession(secret, root, r, nil); err != nil {
+	s := NewSession(secret, root)
+
+	if err := s.Read(r, nil); err != nil && err != types.ErrExpired && err != types.ErrNotExist {
 		t.Fatal(err)
 	}
 
@@ -181,7 +199,9 @@ func TestCleanup(t *testing.T) {
 	r, _ = http.NewRequest("GET", "http://localhost:8080", nil)
 	addCookie(t, "test2", r)
 
-	s, _ = ReadSession(secret, root, r, nil)
+	s = NewSession(secret, root)
+
+	s.Read(r, nil)
 
 	rec = httptest.NewRecorder()
 	s.Write(rec)
@@ -192,7 +212,10 @@ func TestCleanup(t *testing.T) {
 
 	r, _ = http.NewRequest("GET", "http://localhost:8080", nil)
 	addCookie(t, "test1", r)
-	s, _ = ReadSession(secret, root, r, nil)
+
+	s = NewSession(secret, root)
+
+	s.Read(r, nil)
 
 	if v, ok := s.Get("test"); !ok || v.(string) != "test2" {
 		t.Fatalf("Expected the value for 'test' to be 'test2', got '%s'\n", v)
@@ -205,20 +228,28 @@ func TestCleanup(t *testing.T) {
 	r, _ = http.NewRequest("GET", "http://localhost:8080", nil)
 	addCookie(t, "test3", r)
 
-	s, _ = ReadSession(secret, root, r, nil)
-	s.MaxAge = time.Second
+	s = NewSession(secret, root)
+
+	s.Read(r, nil)
+	s.SetMaxAge(time.Second)
 	s.Set("test", "test2")
 
 	rec = httptest.NewRecorder()
 	s.Write(rec)
 
-	if _, err = ReadSession(secret, root, r, nil); err != nil {
+	s = NewSession(secret, root)
+	s.SetName("test3")
+
+	if err := s.Read(r, nil); err != nil {
 		t.Fatal(err)
 	}
 
 	time.Sleep(2 * time.Second)
 
-	if s, err = ReadSession(secret, root, r, nil); err != ErrExpired {
+	s = NewSession(secret, root)
+	s.SetName("test3")
+
+	if err := s.Read(r, nil); err != types.ErrExpired {
 		t.Fatalf("Expected an expiration error, got '%s'\n", err)
 	}
 
@@ -244,7 +275,7 @@ func addCookie(t *testing.T, name string, r *http.Request) {
 	now := time.Now().Unix()
 	hm := hmac.New(sha256.New, secret)
 
-	message := []byte(fmt.Sprintf("%s|%s|%d", cookieName, name, now))
+	message := []byte(fmt.Sprintf("%s|%s|%d", "session", name, now))
 
 	if _, err := hm.Write(message); err != nil {
 		t.Fatal(err)
@@ -257,7 +288,7 @@ func addCookie(t *testing.T, name string, r *http.Request) {
 	encoded := base64.URLEncoding.EncodeToString(sig)
 
 	cookie := &http.Cookie{
-		Name:  cookieName,
+		Name:  "session",
 		Value: string(encoded),
 	}
 

@@ -4,7 +4,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/urandom/webfw/context"
+	"github.com/urandom/webfw/types"
 )
 
 // The Context middleware cleans up the framework context object of any data
@@ -12,7 +12,7 @@ import (
 // chain.
 type Context struct{}
 
-func (cmw Context) Handler(ph http.Handler, c *context.Context, l *log.Logger) http.Handler {
+func (cmw Context) Handler(ph http.Handler, c types.Context, l *log.Logger) http.Handler {
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			c.DeleteAll(r)

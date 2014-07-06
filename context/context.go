@@ -4,20 +4,20 @@ import (
 	"net/http"
 	"sync"
 	"time"
+
+	"github.com/urandom/webfw/types"
 )
 
 type Context struct {
 	mutex    sync.RWMutex
-	data     map[*http.Request]ContextData
+	data     map[*http.Request]types.ContextData
 	lifespan map[*http.Request]int64
 }
-
-type ContextData map[interface{}]interface{}
 
 // NewContext creates a new Context object.
 func NewContext() *Context {
 	return &Context{
-		data:     make(map[*http.Request]ContextData),
+		data:     make(map[*http.Request]types.ContextData),
 		lifespan: make(map[*http.Request]int64),
 	}
 }
@@ -28,7 +28,7 @@ func (c *Context) Set(r *http.Request, key interface{}, val interface{}) {
 	defer c.mutex.Unlock()
 
 	if c.data[r] == nil {
-		c.data[r] = make(ContextData)
+		c.data[r] = make(types.ContextData)
 		c.lifespan[r] = time.Now().Unix()
 	}
 	c.data[r][key] = val
@@ -47,7 +47,7 @@ func (c *Context) Get(r *http.Request, key interface{}) (interface{}, bool) {
 }
 
 // GetAll returns all ContextData for a given request.
-func (c *Context) GetAll(r *http.Request) ContextData {
+func (c *Context) GetAll(r *http.Request) types.ContextData {
 	c.mutex.RLock()
 	defer c.mutex.RUnlock()
 
@@ -80,7 +80,7 @@ func (c *Context) Cleanup(age time.Duration) {
 	defer c.mutex.Unlock()
 
 	if age <= 0 {
-		c.data = make(map[*http.Request]ContextData)
+		c.data = make(map[*http.Request]types.ContextData)
 		c.lifespan = make(map[*http.Request]int64)
 	} else {
 		min := time.Now().Add(-age).Unix()

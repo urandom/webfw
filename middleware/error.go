@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"runtime/debug"
 
-	"github.com/urandom/webfw/context"
+	"github.com/urandom/webfw/types"
 )
 
 // The Error middleware provides basic panic recovery for a request. For
@@ -21,7 +21,7 @@ type Error struct {
 	ShowStack bool
 }
 
-func (emw Error) Handler(ph http.Handler, c *context.Context, l *log.Logger) http.Handler {
+func (emw Error) Handler(ph http.Handler, c types.Context, l *log.Logger) http.Handler {
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if rec := recover(); rec != nil {

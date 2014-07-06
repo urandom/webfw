@@ -24,7 +24,7 @@ type Dispatcher struct {
 	trie            *Trie
 	pattern         string
 	handler         http.Handler
-	context         *context.Context
+	context         types.Context
 	logger          *log.Logger
 	config          Config
 	renderer        *renderer.Renderer

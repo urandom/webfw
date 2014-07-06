@@ -4,7 +4,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/urandom/webfw/context"
+	"github.com/urandom/webfw/types"
 )
 
 const dateFormat = "Jan 2, 2006 at 3:04pm (MST)"
@@ -16,5 +16,5 @@ is set to a Stderr logger by default. It has to return a regular
 http.Handler.
 */
 type Middleware interface {
-	Handler(parentHandler http.Handler, context *context.Context, logger *log.Logger) http.Handler
+	Handler(parentHandler http.Handler, context types.Context, logger *log.Logger) http.Handler
 }

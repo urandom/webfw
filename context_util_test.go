@@ -45,25 +45,21 @@ func TestContextUtil(t *testing.T) {
 	}
 
 	sess := GetSession(c, r)
-	if sess.Name == "" {
+	if sess.Name() == "" {
 		t.Fatalf("Expected a non-empty session name\n")
 	}
 
-	if sess.Path == "" {
-		t.Fatalf("Expected a non-empty session path\n")
-	}
-
-	if len(sess.Values) != 0 {
-		t.Fatalf("Expected an empty session, got %v\n", sess.Values)
+	if len(sess.GetAll()) != 0 {
+		t.Fatalf("Expected an empty session, got %v\n", sess.GetAll())
 	}
 
 	sess.Set("foo", "bar")
-	uuid := sess.Name
+	uuid := sess.Name()
 	c.Set(r, types.BaseCtxKey("session"), sess)
 
 	sess = GetSession(c, r)
-	if sess.Name != uuid {
-		t.Fatalf("Expected Session.Name '%s', got '%s'\n", uuid, sess.Name)
+	if sess.Name() != uuid {
+		t.Fatalf("Expected Session.Name '%s', got '%s'\n", uuid, sess.Name())
 	}
 
 	if v, ok := sess.Get("foo"); ok {
