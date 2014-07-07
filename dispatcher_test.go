@@ -6,7 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/urandom/webfw/types"
+	"github.com/urandom/webfw/context"
 )
 
 func TestDispatcherIncorrectInit(t *testing.T) {
@@ -108,7 +108,7 @@ func TestDispatcherHandle(t *testing.T) {
 
 	c1 := controller{
 		pattern: "/",
-		method:  types.MethodAll,
+		method:  MethodAll,
 		handler: func(w http.ResponseWriter, r *http.Request) {
 			if r.URL.Path != "" && r.URL.Path != "/" {
 				t.Fatalf("Expected the url path to be '' or '/', got %v\n", r.URL.Path)
@@ -120,7 +120,7 @@ func TestDispatcherHandle(t *testing.T) {
 
 	c2 := controller{
 		pattern: "/hello/:name",
-		method:  types.MethodAll,
+		method:  MethodAll,
 		handler: func(w http.ResponseWriter, r *http.Request) {
 			if r.URL.Path != "/hello/World" {
 				t.Fatalf("Expected the url path to be '/hello/World', got %v\n", r.URL.Path)
@@ -171,10 +171,10 @@ type controller struct {
 	handler http.HandlerFunc
 	pattern string
 	name    string
-	method  types.Method
+	method  Method
 }
 
-func (cntl controller) Handler(c types.Context) http.HandlerFunc {
+func (cntl controller) Handler(c context.Context) http.HandlerFunc {
 	return cntl.handler
 }
 
@@ -186,7 +186,7 @@ func (cntl controller) Name() string {
 	return cntl.name
 }
 
-func (cntl controller) Method() types.Method {
+func (cntl controller) Method() Method {
 	return cntl.method
 }
 
@@ -194,7 +194,7 @@ type MyCustomMW struct {
 	to string
 }
 
-func (mmw MyCustomMW) Handler(ph http.Handler, c types.Context, l *log.Logger) http.Handler {
+func (mmw MyCustomMW) Handler(ph http.Handler, c context.Context, l *log.Logger) http.Handler {
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		r.URL.Path = mmw.to
 		c.Set(r, "foo", mmw.to)
@@ -208,7 +208,7 @@ type MyCustomMW2 struct {
 	to string
 }
 
-func (mmw MyCustomMW2) Handler(ph http.Handler, c types.Context, l *log.Logger) http.Handler {
+func (mmw MyCustomMW2) Handler(ph http.Handler, c context.Context, l *log.Logger) http.Handler {
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		r.URL.Path = mmw.to
 		c.Set(r, "foo", mmw.to)

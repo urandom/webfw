@@ -10,7 +10,6 @@ import (
 
 	"github.com/urandom/webfw/context"
 	"github.com/urandom/webfw/renderer"
-	"github.com/urandom/webfw/types"
 )
 
 func TestUrlHandler(t *testing.T) {
@@ -30,8 +29,8 @@ func TestUrlHandler(t *testing.T) {
 
 	r, _ := http.NewRequest("GET", "http://localhost:8080/some/url", nil)
 	rec := httptest.NewRecorder()
-	c.Set(r, types.BaseCtxKey("r"), r)
-	c.Set(r, types.BaseCtxKey("lang"), "en")
+	c.Set(r, context.BaseCtxKey("r"), r)
+	c.Set(r, context.BaseCtxKey("lang"), "en")
 
 	h.ServeHTTP(rec, r)
 

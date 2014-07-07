@@ -5,22 +5,21 @@ import (
 
 	"github.com/urandom/webfw"
 	"github.com/urandom/webfw/context"
-	"github.com/urandom/webfw/controller"
-	"github.com/urandom/webfw/types"
+	"github.com/urandom/webfw/renderer"
 )
 
 type Hello struct {
-	controller.Base
+	webfw.BaseController
 }
 
 func NewHello(pattern string) Hello {
-	return Hello{controller.New(pattern, types.MethodAll, "")}
+	return Hello{webfw.NewBaseController(pattern, MethodAll, "")}
 }
 
 func (con Hello) Handler(c *context.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		params := webfw.GetParams(c, r)
-		d := types.RenderData{"name": params["name"]}
+		d := renderer.RenderData{"name": params["name"]}
 
 		err := webfw.GetRenderCtx(c, r)(w, d, "hello.tmpl")
 		if err != nil {

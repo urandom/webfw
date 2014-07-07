@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/urandom/webfw/context"
 	"github.com/urandom/webfw/renderer"
-	"github.com/urandom/webfw/types"
 )
 
 /*
@@ -41,7 +41,7 @@ type Url struct {
 	Renderer *renderer.Renderer
 }
 
-func (umw Url) Handler(ph http.Handler, c types.Context, l *log.Logger) http.Handler {
+func (umw Url) Handler(ph http.Handler, c context.Context, l *log.Logger) http.Handler {
 	err := umw.Renderer.Funcs(template.FuncMap{
 		"url": func(data ...interface{}) (string, error) {
 			r, parts, err := handleParts(data)
@@ -55,7 +55,7 @@ func (umw Url) Handler(ph http.Handler, c types.Context, l *log.Logger) http.Han
 				return "", err
 			}
 
-			if lang, ok := c.Get(r, types.BaseCtxKey("lang")); ok {
+			if lang, ok := c.Get(r, context.BaseCtxKey("lang")); ok {
 				base = "/" + lang.(string) + base
 			}
 			return base, nil

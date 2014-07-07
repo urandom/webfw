@@ -16,7 +16,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/urandom/webfw/types"
+	"github.com/urandom/webfw/context"
 	"github.com/urandom/webfw/util"
 )
 
@@ -26,6 +26,10 @@ type Renderer struct {
 	path     string
 	baseName string
 }
+
+type RenderCtx func(w io.Writer, data RenderData, names ...string) error
+
+type RenderData map[string]interface{}
 
 // NewRenderer creates a new Renderer object. The path points to a directory
 // containing the template files. The base is the name of the file for the
@@ -65,7 +69,7 @@ func (r *Renderer) Funcs(funcMap template.FuncMap) error {
 //   - "logger", the error logger
 //   - "firstTimer", if the session is newly created
 // The list of data is partially dependant on the middleware chain
-func (r *Renderer) Render(w io.Writer, data types.RenderData, cdata types.ContextData, names ...string) error {
+func (r *Renderer) Render(w io.Writer, data RenderData, cdata context.ContextData, names ...string) error {
 	var tmpl *template.Template
 
 	if len(names) == 0 {
@@ -112,14 +116,14 @@ func (r *Renderer) Render(w io.Writer, data types.RenderData, cdata types.Contex
 	buf := util.BufferPool.GetBuffer()
 
 	if data == nil {
-		data = types.RenderData{}
+		data = RenderData{}
 	}
 
-	baseData := types.RenderData{}
+	baseData := RenderData{}
 
 	data["base"] = baseData
 
-	contextData := types.RenderData{}
+	contextData := RenderData{}
 
 	data["ctx"] = contextData
 
@@ -128,8 +132,8 @@ func (r *Renderer) Render(w io.Writer, data types.RenderData, cdata types.Contex
 		switch k.(type) {
 		case string:
 			contextData[k.(string)] = v
-		case types.BaseCtxKey:
-			baseData[string(k.(types.BaseCtxKey))] = v
+		case context.BaseCtxKey:
+			baseData[string(k.(context.BaseCtxKey))] = v
 		}
 	}
 

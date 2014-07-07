@@ -18,8 +18,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/urandom/webfw/types"
 	"github.com/urandom/webfw/util"
+)
+
+var (
+	ErrExpired        = errors.New("Session expired")
+	ErrNotExist       = errors.New("Session does not exist")
+	ErrCookieNotExist = errors.New("Session cookie does not exist")
 )
 
 /*
@@ -34,12 +39,34 @@ after which an unused session will get cleared of its data and marked as
 expired. It is also used as the max-age and expires fields of the session
 cookie.
 */
-type Session struct {
+type Session interface {
+	Read(*http.Request, Context) error
+	Write(http.ResponseWriter) error
+	Name() string
+	SetName(string)
+	MaxAge() time.Duration
+	SetMaxAge(time.Duration)
+	CookieName() string
+	SetCookieName(string)
+
+	Set(interface{}, interface{})
+	Get(interface{}) (interface{}, bool)
+	GetAll() SessionValues
+	DeleteAll()
+	Delete(interface{})
+	Flash(interface{}) interface{}
+	SetFlash(interface{}, interface{})
+}
+
+type SessionValues map[interface{}]interface{}
+type FlashValues map[interface{}]interface{}
+
+type session struct {
 	Path string
 
 	name       string
 	maxAge     time.Duration
-	values     types.SessionValues
+	values     SessionValues
 	secret     []byte
 	cookieName string
 	mutex      sync.RWMutex
@@ -48,7 +75,7 @@ type Session struct {
 type fileData struct {
 	Name       string
 	MaxAge     time.Duration
-	Values     types.SessionValues
+	Values     SessionValues
 	CookieName string
 }
 
@@ -57,11 +84,11 @@ type contextKey string
 var fsMutex sync.RWMutex
 
 // NewSession creates a new session object.
-func NewSession(secret []byte, path string) *Session {
-	return &Session{
+func NewSession(secret []byte, path string) Session {
+	return &session{
 		Path:       path,
 		maxAge:     time.Hour,
-		values:     types.SessionValues{},
+		values:     SessionValues{},
 		secret:     secret,
 		cookieName: "session",
 	}
@@ -99,11 +126,11 @@ func CleanupSessions(path string, age time.Duration) error {
 // Read fetches the session from the cookie, and loads the session data from
 // the filesystem. It may return a generic error due to the various read
 // operations, or one of the following:
-//  - types.ErrExpired - if its older than the set max-age. The session data
+//  - ErrExpired - if its older than the set max-age. The session data
 //    is removed
-//  - types.ErrNotExist - if session data hasn't been found for this session
-//  - types.ErrCookieNotExist - if a session cookie doesn't exist
-func (s *Session) Read(r *http.Request, c types.Context) error {
+//  - ErrNotExist - if session data hasn't been found for this session
+//  - ErrCookieNotExist - if a session cookie doesn't exist
+func (s *session) Read(r *http.Request, c Context) error {
 	d := http.Dir(s.Path)
 
 	if cookie, err := r.Cookie(s.cookieName); err == nil {
@@ -140,14 +167,14 @@ func (s *Session) Read(r *http.Request, c types.Context) error {
 		if data == nil {
 			s.name = name
 
-			return types.ErrNotExist
+			return ErrNotExist
 		} else {
 			if s.maxAge != 0 {
 				maxAge := time.Now().Add(-s.maxAge).Unix()
 
 				if date < maxAge {
 					s.DeleteAll()
-					return types.ErrExpired
+					return ErrExpired
 				}
 			}
 		}
@@ -158,14 +185,14 @@ func (s *Session) Read(r *http.Request, c types.Context) error {
 
 		return nil
 	} else {
-		return types.ErrCookieNotExist
+		return ErrCookieNotExist
 	}
 }
 
 // Write stores the session name in the session cookie along with the current
 // date, and writes the session data to the filesystem, under the path which
 // is stored in the session itself.
-func (s *Session) Write(w http.ResponseWriter) error {
+func (s *session) Write(w http.ResponseWriter) error {
 	buf := util.BufferPool.GetBuffer()
 	defer util.BufferPool.Put(buf)
 
@@ -217,38 +244,38 @@ func (s *Session) Write(w http.ResponseWriter) error {
 }
 
 // Name returns the name of the session
-func (s *Session) Name() string {
+func (s *session) Name() string {
 	return s.name
 }
 
 // SetName sets a new name for the session
-func (s *Session) SetName(name string) {
+func (s *session) SetName(name string) {
 	s.name = name
 }
 
 // MaxAge returns the max-age of the session
-func (s *Session) MaxAge() time.Duration {
+func (s *session) MaxAge() time.Duration {
 	return s.maxAge
 }
 
 // SetMaxAge sets a new max age for the session
-func (s *Session) SetMaxAge(maxAge time.Duration) {
+func (s *session) SetMaxAge(maxAge time.Duration) {
 	s.maxAge = maxAge
 }
 
 // CookieName returns the cookie name, used to store the session name in
 // the client
-func (s *Session) CookieName() string {
+func (s *session) CookieName() string {
 	return s.cookieName
 }
 
 // SetCookieName sets a new cookie name for the session
-func (s *Session) SetCookieName(name string) {
+func (s *session) SetCookieName(name string) {
 	s.cookieName = name
 }
 
 // Set stores a key-value pair in the session.
-func (s *Session) Set(key interface{}, val interface{}) {
+func (s *session) Set(key interface{}, val interface{}) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
@@ -256,7 +283,7 @@ func (s *Session) Set(key interface{}, val interface{}) {
 }
 
 // Get fetches a value for a given key.
-func (s *Session) Get(key interface{}) (interface{}, bool) {
+func (s *session) Get(key interface{}) (interface{}, bool) {
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()
 
@@ -267,7 +294,7 @@ func (s *Session) Get(key interface{}) (interface{}, bool) {
 }
 
 // GetAll returns all values stored in the session
-func (s *Session) GetAll() types.SessionValues {
+func (s *session) GetAll() SessionValues {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
@@ -275,15 +302,15 @@ func (s *Session) GetAll() types.SessionValues {
 }
 
 // DeleteAll removes all key-value pairs from the session.
-func (s *Session) DeleteAll() {
+func (s *session) DeleteAll() {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
-	s.values = types.SessionValues{}
+	s.values = SessionValues{}
 }
 
 // Delete removes a value for a given key.
-func (s *Session) Delete(key interface{}) {
+func (s *session) Delete(key interface{}) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
@@ -292,11 +319,11 @@ func (s *Session) Delete(key interface{}) {
 
 // Flash gets a flash value for a given key from the session.  Flash values
 // are temporary values that are removed when they are fetched.
-func (s *Session) Flash(key interface{}) interface{} {
+func (s *session) Flash(key interface{}) interface{} {
 	var val interface{}
 
 	if flash, ok := s.Get(contextKey("flashValues")); ok {
-		flashValues := flash.(types.FlashValues)
+		flashValues := flash.(FlashValues)
 
 		if val, ok = flashValues[key]; ok {
 			delete(flashValues, key)
@@ -309,13 +336,13 @@ func (s *Session) Flash(key interface{}) interface{} {
 }
 
 // SetFlash stores a flash value under a given key.
-func (s *Session) SetFlash(key interface{}, value interface{}) {
-	var flashValues types.FlashValues
+func (s *session) SetFlash(key interface{}, value interface{}) {
+	var flashValues FlashValues
 
 	if val, ok := s.Get(contextKey("flashValues")); ok {
-		flashValues = val.(types.FlashValues)
+		flashValues = val.(FlashValues)
 	} else {
-		flashValues = types.FlashValues{}
+		flashValues = FlashValues{}
 	}
 
 	flashValues[key] = value
@@ -323,7 +350,7 @@ func (s *Session) SetFlash(key interface{}, value interface{}) {
 	s.Set(contextKey("flashValues"), flashValues)
 }
 
-func (s *Session) toData() *fileData {
+func (s *session) toData() *fileData {
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()
 
@@ -335,7 +362,7 @@ func (s *Session) toData() *fileData {
 	}
 }
 
-func (s *Session) fromData(data *fileData) {
+func (s *session) fromData(data *fileData) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
@@ -409,7 +436,7 @@ func createSignature(cookieName string, name, secret []byte, date int64) ([]byte
 	return mac, nil
 }
 
-func getSessionData(name string, r *http.Request, c types.Context) (*fileData, bool) {
+func getSessionData(name string, r *http.Request, c Context) (*fileData, bool) {
 	if c != nil {
 		if sd, ok := c.Get(r, contextKey(name)); ok {
 			if s, ok := sd.(*fileData); ok {

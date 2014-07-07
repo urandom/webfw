@@ -11,8 +11,8 @@ import (
 	"strings"
 	ttemplate "text/template"
 
+	"github.com/urandom/webfw/context"
 	"github.com/urandom/webfw/renderer"
-	"github.com/urandom/webfw/types"
 	"github.com/urandom/webfw/util"
 
 	"github.com/nicksnyder/go-i18n/i18n"
@@ -68,7 +68,7 @@ type I18N struct {
 	IgnoreURLPrefix []string
 }
 
-func (imw I18N) Handler(ph http.Handler, c types.Context, l *log.Logger) http.Handler {
+func (imw I18N) Handler(ph http.Handler, c context.Context, l *log.Logger) http.Handler {
 	for _, l := range imw.Languages {
 		i18n.MustLoadTranslationFile(filepath.Join(imw.Dir, l+".all.json"))
 	}
@@ -84,10 +84,10 @@ func (imw I18N) Handler(ph http.Handler, c types.Context, l *log.Logger) http.Ha
 	}
 
 	handler := func(w http.ResponseWriter, r *http.Request) {
-		c.Set(r, types.BaseCtxKey("langs"), imw.Languages)
+		c.Set(r, context.BaseCtxKey("langs"), imw.Languages)
 
 		if len(imw.Languages) == 0 {
-			c.Set(r, types.BaseCtxKey("lang"), "")
+			c.Set(r, context.BaseCtxKey("lang"), "")
 			ph.ServeHTTP(w, r)
 			return
 		}
@@ -122,11 +122,11 @@ func (imw I18N) Handler(ph http.Handler, c types.Context, l *log.Logger) http.Ha
 				if strings.HasPrefix(r.URL.Path, imw.Pattern+language+"/") {
 					r.URL.Path = imw.Pattern + r.URL.Path[len(imw.Pattern+language+"/"):]
 
-					c.Set(r, types.BaseCtxKey("lang"), language)
+					c.Set(r, context.BaseCtxKey("lang"), language)
 					found = true
 
-					if val, ok := c.Get(r, types.BaseCtxKey("session")); ok {
-						val.(types.Session).Set("language", language)
+					if val, ok := c.Get(r, context.BaseCtxKey("session")); ok {
+						val.(context.Session).Set("language", language)
 					} else {
 						l.Println("Session not found, unable to store current language")
 					}
@@ -157,7 +157,7 @@ func (imw I18N) Handler(ph http.Handler, c types.Context, l *log.Logger) http.Ha
 			}
 
 			if !found && !foundShort {
-				c.Set(r, types.BaseCtxKey("lang"), "")
+				c.Set(r, context.BaseCtxKey("lang"), "")
 				ph.ServeHTTP(w, r)
 				return
 			}
@@ -190,9 +190,9 @@ func (imw I18N) Handler(ph http.Handler, c types.Context, l *log.Logger) http.Ha
 
 var localeRegexp = regexp.MustCompile(`\.[\w\-]+$`)
 
-func FallbackLocale(c types.Context, r *http.Request) string {
-	if val, ok := c.Get(r, types.BaseCtxKey("session")); ok {
-		sess := val.(types.Session)
+func FallbackLocale(c context.Context, r *http.Request) string {
+	if val, ok := c.Get(r, context.BaseCtxKey("session")); ok {
+		sess := val.(context.Session)
 
 		if language, ok := sess.Get("language"); ok {
 			return language.(string)

@@ -6,12 +6,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/urandom/webfw/types"
+	"github.com/urandom/webfw/context"
 )
 
 func TestRenderer(t *testing.T) {
 	r := NewRenderer("testdata", "test.tmpl")
-	cd := types.ContextData{}
+	cd := context.ContextData{}
 
 	buf := new(bytes.Buffer)
 
@@ -58,7 +58,7 @@ func TestRenderer(t *testing.T) {
 	}
 
 	buf.Reset()
-	cd[types.BaseCtxKey("test")] = "foo"
+	cd[context.BaseCtxKey("test")] = "foo"
 	cd["test"] = "bar"
 	if err := r.Render(buf, nil, cd, "test_inner.tmpl", "test_normal.tmpl"); err != nil {
 		t.Fatal(err)
@@ -85,7 +85,7 @@ func TestRenderer(t *testing.T) {
 	}
 
 	buf.Reset()
-	data := types.RenderData{"test": "stuff"}
+	data := RenderData{"test": "stuff"}
 	if err := r.Render(buf, data, cd, "test_inner.tmpl", "test_func.tmpl"); err != nil {
 		t.Fatal(err)
 	}

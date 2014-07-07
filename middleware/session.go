@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/urandom/webfw/context"
-	"github.com/urandom/webfw/types"
 	"github.com/urandom/webfw/util"
 )
 
@@ -35,7 +34,7 @@ type Session struct {
 	CleanupMaxAge   string
 }
 
-func (smw Session) Handler(ph http.Handler, c types.Context, l *log.Logger) http.Handler {
+func (smw Session) Handler(ph http.Handler, c context.Context, l *log.Logger) http.Handler {
 	var abspath string
 	var maxAge, cleanupInterval, cleanupMaxAge time.Duration
 
@@ -91,17 +90,17 @@ func (smw Session) Handler(ph http.Handler, c types.Context, l *log.Logger) http
 
 		err := sess.Read(r, c)
 
-		if err != nil && err != types.ErrExpired && err != types.ErrNotExist {
+		if err != nil && err != context.ErrExpired && err != context.ErrNotExist {
 			sess.SetName(util.UUID())
 			firstTimer = true
 
-			if err != types.ErrCookieNotExist {
+			if err != context.ErrCookieNotExist {
 				l.Printf("Error reading session: %v", err)
 			}
 		}
 
-		c.Set(r, types.BaseCtxKey("session"), sess)
-		c.Set(r, types.BaseCtxKey("firstTimer"), firstTimer)
+		c.Set(r, context.BaseCtxKey("session"), sess)
+		c.Set(r, context.BaseCtxKey("firstTimer"), firstTimer)
 
 		rec := httptest.NewRecorder()
 

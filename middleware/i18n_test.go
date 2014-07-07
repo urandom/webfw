@@ -10,7 +10,6 @@ import (
 
 	"github.com/urandom/webfw/context"
 	"github.com/urandom/webfw/renderer"
-	"github.com/urandom/webfw/types"
 )
 
 func TestI18NHandler(t *testing.T) {
@@ -60,7 +59,7 @@ func TestI18NHandler(t *testing.T) {
 
 	s := context.NewSession([]byte(""), os.TempDir())
 	s.SetName("test1")
-	c.Set(r, types.BaseCtxKey("session"), s)
+	c.Set(r, context.BaseCtxKey("session"), s)
 	h.ServeHTTP(rec, r)
 
 	if rec.Code != http.StatusOK {

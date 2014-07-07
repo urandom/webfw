@@ -1,10 +1,6 @@
 package webfw
 
-import (
-	"testing"
-
-	"github.com/urandom/webfw/types"
-)
+import "testing"
 
 func TestAddRoute(t *testing.T) {
 	trie := NewTrie()
@@ -17,7 +13,7 @@ func TestAddRoute(t *testing.T) {
 		t.Fatal()
 	}
 
-	if trie.AddRoute(&Route{Pattern: "/", Method: types.MethodGet}) != nil {
+	if trie.AddRoute(&Route{Pattern: "/", Method: MethodGet}) != nil {
 		t.Fatal()
 	}
 
@@ -25,7 +21,7 @@ func TestAddRoute(t *testing.T) {
 		t.Fatal()
 	}
 
-	trie.AddRoute(&Route{Pattern: "/1/2/3", Method: types.MethodGet})
+	trie.AddRoute(&Route{Pattern: "/1/2/3", Method: MethodGet})
 
 	if trie.root.children["/"].children["1"].children["/"].children["2"].children["/"].children["3"] == nil {
 		t.Fatal()
@@ -37,7 +33,7 @@ func TestAddRoute(t *testing.T) {
 
 	trie = NewTrie()
 
-	trie.AddRoute(&Route{Pattern: "/1 /*2", Method: types.MethodGet})
+	trie.AddRoute(&Route{Pattern: "/1 /*2", Method: MethodGet})
 	n := trie.root.children["/"].children["1"].children["%"].children["2"].children["0"].children["/"].children["2"]
 	if n == nil {
 		t.Fatal()
@@ -50,7 +46,7 @@ func TestAddRoute(t *testing.T) {
 func TestAddRouteParam(t *testing.T) {
 	trie := NewTrie()
 
-	trie.AddRoute(&Route{Pattern: "/f/:param1/t:param2", Method: types.MethodGet})
+	trie.AddRoute(&Route{Pattern: "/f/:param1/t:param2", Method: MethodGet})
 
 	if trie.root.children["/"].children["f"].children["/"].children["param1"].
 		children["/"].children["t"].children["param2"] == nil {
@@ -76,7 +72,7 @@ func TestAddRouteParam(t *testing.T) {
 		t.Fatal()
 	}
 
-	if err := trie.AddRoute(&Route{Pattern: "/f/*error", Method: types.MethodGet}); err == nil {
+	if err := trie.AddRoute(&Route{Pattern: "/f/*error", Method: MethodGet}); err == nil {
 		t.Fatal(err)
 	}
 }
@@ -84,7 +80,7 @@ func TestAddRouteParam(t *testing.T) {
 func TestAddRouteGlob(t *testing.T) {
 	trie := NewTrie()
 
-	if trie.AddRoute(&Route{Pattern: "/f/*param1/test/:fakeparam2", Method: types.MethodGet}) != nil {
+	if trie.AddRoute(&Route{Pattern: "/f/*param1/test/:fakeparam2", Method: MethodGet}) != nil {
 		t.Fatal()
 	}
 
@@ -105,13 +101,13 @@ func TestAddRouteGlob(t *testing.T) {
 func TestAddRouteNamed(t *testing.T) {
 	trie := NewTrie()
 
-	trie.AddRoute(&Route{Pattern: "/f/:param1/t:param2", Method: types.MethodGet, Name: "test1"})
+	trie.AddRoute(&Route{Pattern: "/f/:param1/t:param2", Method: MethodGet, Name: "test1"})
 
 	if trie.named == nil {
 		t.Fatal()
 	}
 
-	if nodes, ok := trie.named[types.MethodGet]; ok {
+	if nodes, ok := trie.named[MethodGet]; ok {
 		if n, ok := nodes["test1"]; ok {
 			if n.nodeType != param {
 				t.Fatal()
@@ -129,7 +125,7 @@ func TestAddRouteNamed(t *testing.T) {
 				t.Fatal()
 			}
 
-			if r, ok := n.routes[types.MethodGet]; ok {
+			if r, ok := n.routes[MethodGet]; ok {
 				if r.Pattern != "/f/:param1/t:param2" {
 					t.Fatal()
 				}
@@ -143,7 +139,7 @@ func TestAddRouteNamed(t *testing.T) {
 		t.Fatal()
 	}
 
-	if trie.AddRoute(&Route{Pattern: "bla", Method: types.MethodGet, Name: "test1"}) == nil {
+	if trie.AddRoute(&Route{Pattern: "bla", Method: MethodGet, Name: "test1"}) == nil {
 		t.Fatal()
 	}
 }
@@ -151,11 +147,11 @@ func TestAddRouteNamed(t *testing.T) {
 func TestAddRouteMethods(t *testing.T) {
 	trie := NewTrie()
 
-	if trie.AddRoute(&Route{Pattern: "/f", Method: types.MethodGet | types.MethodPost, Name: "test1"}) != nil {
+	if trie.AddRoute(&Route{Pattern: "/f", Method: MethodGet | MethodPost, Name: "test1"}) != nil {
 		t.Fatal()
 	}
 
-	if trie.AddRoute(&Route{Pattern: "/f", Method: types.MethodPut | types.MethodDelete, Name: "test2"}) != nil {
+	if trie.AddRoute(&Route{Pattern: "/f", Method: MethodPut | MethodDelete, Name: "test2"}) != nil {
 		t.Fatal()
 	}
 
@@ -164,27 +160,27 @@ func TestAddRouteMethods(t *testing.T) {
 		t.Fatal()
 	}
 
-	if n.routes[types.MethodGet].Name != "test1" {
+	if n.routes[MethodGet].Name != "test1" {
 		t.Fatal()
 	}
 
-	if n.routes[types.MethodPost].Name != "test1" {
+	if n.routes[MethodPost].Name != "test1" {
 		t.Fatal()
 	}
 
-	if n.routes[types.MethodPut].Name != "test2" {
+	if n.routes[MethodPut].Name != "test2" {
 		t.Fatal()
 	}
 
-	if n.routes[types.MethodDelete].Name != "test2" {
+	if n.routes[MethodDelete].Name != "test2" {
 		t.Fatal()
 	}
 
-	if trie.AddRoute(&Route{Pattern: "/f", Method: types.MethodGet | types.MethodDelete, Name: "test3"}) == nil {
+	if trie.AddRoute(&Route{Pattern: "/f", Method: MethodGet | MethodDelete, Name: "test3"}) == nil {
 		t.Fatal()
 	}
 
-	if trie.AddRoute(&Route{Pattern: "/f", Method: types.MethodAll, Name: "test3"}) == nil {
+	if trie.AddRoute(&Route{Pattern: "/f", Method: MethodAll, Name: "test3"}) == nil {
 		t.Fatal()
 	}
 }
@@ -192,16 +188,16 @@ func TestAddRouteMethods(t *testing.T) {
 func TestLookupNamed(t *testing.T) {
 	trie := NewTrie()
 
-	trie.AddRoute(&Route{Pattern: "/f", Method: types.MethodGet | types.MethodPost, Name: "test1"})
-	trie.AddRoute(&Route{Pattern: "/f", Method: types.MethodPut | types.MethodDelete, Name: "test2"})
-	trie.AddRoute(&Route{Pattern: "/b", Method: types.MethodAll, Name: "test3"})
+	trie.AddRoute(&Route{Pattern: "/f", Method: MethodGet | MethodPost, Name: "test1"})
+	trie.AddRoute(&Route{Pattern: "/f", Method: MethodPut | MethodDelete, Name: "test2"})
+	trie.AddRoute(&Route{Pattern: "/b", Method: MethodAll, Name: "test3"})
 
-	if m, ok := trie.LookupNamed("test1", types.MethodAll); ok {
+	if m, ok := trie.LookupNamed("test1", MethodAll); ok {
 		if len(m.routes) != 2 {
 			t.Fatal()
 		}
 
-		if r, ok := m.routes[types.MethodGet]; ok {
+		if r, ok := m.routes[MethodGet]; ok {
 			if r.Pattern != "/f" {
 				t.Fatal()
 			}
@@ -209,7 +205,7 @@ func TestLookupNamed(t *testing.T) {
 			t.Fatal()
 		}
 
-		if r, ok := m.routes[types.MethodPost]; ok {
+		if r, ok := m.routes[MethodPost]; ok {
 			if r.Pattern != "/f" {
 				t.Fatal()
 			}
@@ -220,12 +216,12 @@ func TestLookupNamed(t *testing.T) {
 		t.Fatal()
 	}
 
-	if m, ok := trie.LookupNamed("test2", types.MethodAll); ok {
+	if m, ok := trie.LookupNamed("test2", MethodAll); ok {
 		if len(m.routes) != 2 {
 			t.Fatal()
 		}
 
-		if r, ok := m.routes[types.MethodPut]; ok {
+		if r, ok := m.routes[MethodPut]; ok {
 			if r.Pattern != "/f" {
 				t.Fatal()
 			}
@@ -233,7 +229,7 @@ func TestLookupNamed(t *testing.T) {
 			t.Fatal()
 		}
 
-		if r, ok := m.routes[types.MethodDelete]; ok {
+		if r, ok := m.routes[MethodDelete]; ok {
 			if r.Pattern != "/f" {
 				t.Fatal()
 			}
@@ -244,12 +240,12 @@ func TestLookupNamed(t *testing.T) {
 		t.Fatal()
 	}
 
-	if m, ok := trie.LookupNamed("test3", types.MethodDelete); ok {
+	if m, ok := trie.LookupNamed("test3", MethodDelete); ok {
 		if len(m.routes) != 1 {
 			t.Fatal()
 		}
 
-		if r, ok := m.routes[types.MethodDelete]; ok {
+		if r, ok := m.routes[MethodDelete]; ok {
 			if r.Pattern != "/b" {
 				t.Fatal()
 			}
@@ -263,14 +259,14 @@ func TestLookupNamed(t *testing.T) {
 
 func TestLookup(t *testing.T) {
 	trie := NewTrie()
-	trie.AddRoute(&Route{Pattern: "/f/:param1/t:param2", Method: types.MethodGet})
+	trie.AddRoute(&Route{Pattern: "/f/:param1/t:param2", Method: MethodGet})
 
-	if match, ok := trie.Lookup("/f/hello/tWorld", types.MethodAll); ok {
+	if match, ok := trie.Lookup("/f/hello/tWorld", MethodAll); ok {
 		if len(match.routes) != 1 {
 			t.Fatal()
 		}
 
-		if r, ok := match.routes[types.MethodGet]; ok {
+		if r, ok := match.routes[MethodGet]; ok {
 			if r.Pattern != "/f/:param1/t:param2" {
 				t.Fatal()
 			}
@@ -295,16 +291,16 @@ func TestLookup(t *testing.T) {
 		t.Fatal()
 	}
 
-	if err := trie.AddRoute(&Route{Pattern: "/f/:param1/*glob/conti:nuing", Method: types.MethodGet}); err != nil {
+	if err := trie.AddRoute(&Route{Pattern: "/f/:param1/*glob/conti:nuing", Method: MethodGet}); err != nil {
 		t.Fatal(err)
 	}
 
-	if match, ok := trie.Lookup("/f/hello/tWorld", types.MethodAll); ok {
+	if match, ok := trie.Lookup("/f/hello/tWorld", MethodAll); ok {
 		if len(match.routes) != 1 {
 			t.Fatal()
 		}
 
-		if r, ok := match.routes[types.MethodGet]; ok {
+		if r, ok := match.routes[MethodGet]; ok {
 			if r.Pattern != "/f/:param1/*glob/conti:nuing" {
 				t.Fatal()
 			}
@@ -329,9 +325,9 @@ func TestLookup(t *testing.T) {
 		t.Fatal()
 	}
 
-	trie.AddRoute(&Route{Pattern: "/", Method: types.MethodGet})
+	trie.AddRoute(&Route{Pattern: "/", Method: MethodGet})
 
-	if match, ok := trie.Lookup("/f/hello/tWorld", types.MethodAll); ok {
+	if match, ok := trie.Lookup("/f/hello/tWorld", MethodAll); ok {
 		if len(match.routes) != 1 {
 			t.Fatal()
 		}

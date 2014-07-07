@@ -4,38 +4,47 @@ import (
 	"net/http"
 	"sync"
 	"time"
-
-	"github.com/urandom/webfw/types"
 )
 
-type Context struct {
+type Context interface {
+	Set(*http.Request, interface{}, interface{})
+	Get(*http.Request, interface{}) (interface{}, bool)
+	GetAll(*http.Request) ContextData
+	DeleteAll(*http.Request)
+	Delete(*http.Request, interface{})
+}
+
+type ContextData map[interface{}]interface{}
+type BaseCtxKey string
+
+type context struct {
 	mutex    sync.RWMutex
-	data     map[*http.Request]types.ContextData
+	data     map[*http.Request]ContextData
 	lifespan map[*http.Request]int64
 }
 
 // NewContext creates a new Context object.
-func NewContext() *Context {
-	return &Context{
-		data:     make(map[*http.Request]types.ContextData),
+func NewContext() Context {
+	return &context{
+		data:     make(map[*http.Request]ContextData),
 		lifespan: make(map[*http.Request]int64),
 	}
 }
 
 // Set binds a key-value pair for a given request in the context.
-func (c *Context) Set(r *http.Request, key interface{}, val interface{}) {
+func (c *context) Set(r *http.Request, key interface{}, val interface{}) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
 	if c.data[r] == nil {
-		c.data[r] = make(types.ContextData)
+		c.data[r] = make(ContextData)
 		c.lifespan[r] = time.Now().Unix()
 	}
 	c.data[r][key] = val
 }
 
 // Get returns a value for a given key, bound to a request.
-func (c *Context) Get(r *http.Request, key interface{}) (interface{}, bool) {
+func (c *context) Get(r *http.Request, key interface{}) (interface{}, bool) {
 	c.mutex.RLock()
 	defer c.mutex.RUnlock()
 
@@ -47,7 +56,7 @@ func (c *Context) Get(r *http.Request, key interface{}) (interface{}, bool) {
 }
 
 // GetAll returns all ContextData for a given request.
-func (c *Context) GetAll(r *http.Request) types.ContextData {
+func (c *context) GetAll(r *http.Request) ContextData {
 	c.mutex.RLock()
 	defer c.mutex.RUnlock()
 
@@ -58,7 +67,7 @@ func (c *Context) GetAll(r *http.Request) types.ContextData {
 }
 
 // DeleteAll removes all context data for a request.
-func (c *Context) DeleteAll(r *http.Request) {
+func (c *context) DeleteAll(r *http.Request) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
@@ -67,7 +76,7 @@ func (c *Context) DeleteAll(r *http.Request) {
 }
 
 // Delete removes a key-value pair bound to a request.
-func (c *Context) Delete(r *http.Request, key interface{}) {
+func (c *context) Delete(r *http.Request, key interface{}) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
@@ -75,12 +84,12 @@ func (c *Context) Delete(r *http.Request, key interface{}) {
 }
 
 // Cleanup cleans any ContextData older than a given age.
-func (c *Context) Cleanup(age time.Duration) {
+func (c *context) Cleanup(age time.Duration) {
 	c.mutex.Lock()
 	defer c.mutex.Unlock()
 
 	if age <= 0 {
-		c.data = make(map[*http.Request]types.ContextData)
+		c.data = make(map[*http.Request]ContextData)
 		c.lifespan = make(map[*http.Request]int64)
 	} else {
 		min := time.Now().Add(-age).Unix()

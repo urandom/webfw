@@ -11,8 +11,6 @@ import (
 	"path/filepath"
 	"testing"
 	"time"
-
-	"github.com/urandom/webfw/types"
 )
 
 var secret = []byte("test")
@@ -29,8 +27,8 @@ func TestSession(t *testing.T) {
 		t.Fatalf("Expected the session max-age to be a duration of 1h, got '%s'\n", s.MaxAge())
 	}
 
-	if s.Path != os.TempDir() {
-		t.Fatalf("Expected the session path to be set to the os temp-dir, got '%s'\n", s.Path)
+	if s.(*session).Path != os.TempDir() {
+		t.Fatalf("Expected the session path to be set to the os temp-dir, got '%s'\n", s.(*session).Path)
 	}
 
 	context := NewContext()
@@ -68,7 +66,7 @@ func TestSession(t *testing.T) {
 
 	temp = NewSession(secret, os.TempDir())
 
-	if err = temp.Read(r, nil); err != nil && err != types.ErrExpired && err != types.ErrNotExist {
+	if err = temp.Read(r, nil); err != nil && err != ErrExpired && err != ErrNotExist {
 		t.Fatal(err)
 	}
 
@@ -179,7 +177,7 @@ func TestCleanup(t *testing.T) {
 
 	s := NewSession(secret, root)
 
-	if err := s.Read(r, nil); err != nil && err != types.ErrExpired && err != types.ErrNotExist {
+	if err := s.Read(r, nil); err != nil && err != ErrExpired && err != ErrNotExist {
 		t.Fatal(err)
 	}
 
@@ -249,7 +247,7 @@ func TestCleanup(t *testing.T) {
 	s = NewSession(secret, root)
 	s.SetName("test3")
 
-	if err := s.Read(r, nil); err != types.ErrExpired {
+	if err := s.Read(r, nil); err != ErrExpired {
 		t.Fatalf("Expected an expiration error, got '%s'\n", err)
 	}
 

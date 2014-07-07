@@ -12,7 +12,6 @@ import (
 	"github.com/urandom/webfw/context"
 	"github.com/urandom/webfw/middleware"
 	"github.com/urandom/webfw/renderer"
-	"github.com/urandom/webfw/types"
 )
 
 // Dispatchers are responsible for calling controller handlers for a
@@ -24,11 +23,11 @@ type Dispatcher struct {
 	trie            *Trie
 	pattern         string
 	handler         http.Handler
-	context         types.Context
+	context         context.Context
 	logger          *log.Logger
 	config          Config
 	renderer        *renderer.Renderer
-	middleware      map[string]types.Middleware
+	middleware      map[string]middleware.Middleware
 	middlewareOrder []string
 }
 
@@ -44,7 +43,7 @@ func NewDispatcher(pattern string, c Config) *Dispatcher {
 		pattern:    pattern,
 		context:    context.NewContext(),
 		logger:     log.New(os.Stderr, "", 0),
-		middleware: make(map[string]types.Middleware),
+		middleware: make(map[string]middleware.Middleware),
 	}
 
 	return d
@@ -56,7 +55,7 @@ func NewDispatcher(pattern string, c Config) *Dispatcher {
 // otherwise it will be added to the end of the chain, closest to the
 // controller handler. Middleware, supplied by webfw may also be registered
 // in this manner, if a more fine-grained configuration is desired.
-func (d *Dispatcher) RegisterMiddleware(mw types.Middleware) {
+func (d *Dispatcher) RegisterMiddleware(mw middleware.Middleware) {
 	name := reflect.TypeOf(mw).Name()
 
 	d.middleware[name] = mw
@@ -66,7 +65,7 @@ func (d *Dispatcher) RegisterMiddleware(mw types.Middleware) {
 // SetContext allows for setting a different context implementation. This
 // should ideally be called before registering any controller, so that any
 // controller handler method is called with the new context.
-func (d *Dispatcher) SetContext(context types.Context) {
+func (d *Dispatcher) SetContext(context context.Context) {
 	d.context = context
 }
 
@@ -76,7 +75,7 @@ func (d *Dispatcher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 // Handle registers the provided controller.
-func (d *Dispatcher) Handle(c types.Controller) {
+func (d *Dispatcher) Handle(c Controller) {
 	r := &Route{
 		c.Pattern(), c.Method(), c.Handler(d.context), c.Name(),
 	}
@@ -89,18 +88,18 @@ func (d *Dispatcher) Handle(c types.Controller) {
 func (d *Dispatcher) handlerFunc() http.Handler {
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		path := r.URL.RequestURI()
-		method := types.ReverseMethodNames[r.Method]
+		method := ReverseMethodNames[r.Method]
 
 		if d.pattern != "/" {
 			path = path[len(d.pattern)-1:]
 		}
 
-		d.context.Set(r, types.BaseCtxKey("r"), r)
-		d.context.Set(r, types.BaseCtxKey("renderer"), d.renderer)
-		d.context.Set(r, types.BaseCtxKey("logger"), d.logger)
+		d.context.Set(r, context.BaseCtxKey("r"), r)
+		d.context.Set(r, context.BaseCtxKey("renderer"), d.renderer)
+		d.context.Set(r, context.BaseCtxKey("logger"), d.logger)
 
 		if match, ok := d.trie.Lookup(path, method); ok {
-			d.context.Set(r, types.BaseCtxKey("params"), match.params)
+			d.context.Set(r, context.BaseCtxKey("params"), match.params)
 
 			route := match.routes[method]
 			route.Handler(w, r)
@@ -120,7 +119,7 @@ func (d *Dispatcher) handlerFunc() http.Handler {
 func (d *Dispatcher) init() {
 	d.renderer = renderer.NewRenderer(d.config.Renderer.Dir, d.config.Renderer.Base)
 
-	var mw []types.Middleware
+	var mw []middleware.Middleware
 	order := []string{}
 	middlewareInserted := make(map[string]bool)
 
@@ -185,7 +184,7 @@ func (d *Dispatcher) init() {
 	for _, name := range reverseOrder {
 		if !middlewareInserted[name] {
 			if custom, ok := d.middleware[name]; ok {
-				mw = append([]types.Middleware{custom}, mw...)
+				mw = append([]middleware.Middleware{custom}, mw...)
 				order = append([]string{name}, order...)
 			}
 		}
@@ -199,7 +198,7 @@ func (d *Dispatcher) init() {
 
 	handler = func(ph http.Handler) http.Handler {
 		handler := func(w http.ResponseWriter, r *http.Request) {
-			d.context.Set(r, types.BaseCtxKey("config"), d.config)
+			d.context.Set(r, context.BaseCtxKey("config"), d.config)
 
 			ph.ServeHTTP(w, r)
 		}

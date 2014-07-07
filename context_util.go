@@ -11,14 +11,13 @@ import (
 	"github.com/urandom/webfw/context"
 	"github.com/urandom/webfw/middleware"
 	"github.com/urandom/webfw/renderer"
-	"github.com/urandom/webfw/types"
 	"github.com/urandom/webfw/util"
 )
 
 // GetConfig is a helper function for getting the current config
 // from the request context.
-func GetConfig(c types.Context, r *http.Request) Config {
-	if val, ok := c.Get(r, types.BaseCtxKey("config")); ok {
+func GetConfig(c context.Context, r *http.Request) Config {
+	if val, ok := c.Get(r, context.BaseCtxKey("config")); ok {
 		return val.(Config)
 	}
 
@@ -26,19 +25,19 @@ func GetConfig(c types.Context, r *http.Request) Config {
 }
 
 // GetParams returns the current request path parameters from the context.
-func GetParams(c types.Context, r *http.Request) types.RouteParams {
-	if val, ok := c.Get(r, types.BaseCtxKey("params")); ok {
-		return val.(types.RouteParams)
+func GetParams(c context.Context, r *http.Request) RouteParams {
+	if val, ok := c.Get(r, context.BaseCtxKey("params")); ok {
+		return val.(RouteParams)
 	}
 
-	return types.RouteParams{}
+	return RouteParams{}
 }
 
 // GetSession returns the current session from the context,
 // if the Session middleware is in use.
-func GetSession(c types.Context, r *http.Request) types.Session {
-	if val, ok := c.Get(r, types.BaseCtxKey("session")); ok {
-		return val.(types.Session)
+func GetSession(c context.Context, r *http.Request) context.Session {
+	if val, ok := c.Get(r, context.BaseCtxKey("session")); ok {
+		return val.(context.Session)
 	}
 
 	conf := GetConfig(c, r)
@@ -62,8 +61,8 @@ func GetSession(c types.Context, r *http.Request) types.Session {
 
 // GetLanguage returns the current request language, such as "en", or "bg-BG"
 // from the context, if the I18N middleware is in use.
-func GetLanguage(c types.Context, r *http.Request) string {
-	if val, ok := c.Get(r, types.BaseCtxKey("lang")); ok {
+func GetLanguage(c context.Context, r *http.Request) string {
+	if val, ok := c.Get(r, context.BaseCtxKey("lang")); ok {
 		return val.(string)
 	}
 
@@ -71,8 +70,8 @@ func GetLanguage(c types.Context, r *http.Request) string {
 }
 
 // GetRenderer returns the current raw renderer from the context.
-func GetRenderer(c types.Context, r *http.Request) *renderer.Renderer {
-	if val, ok := c.Get(r, types.BaseCtxKey("renderer")); ok {
+func GetRenderer(c context.Context, r *http.Request) *renderer.Renderer {
+	if val, ok := c.Get(r, context.BaseCtxKey("renderer")); ok {
 		return val.(*renderer.Renderer)
 	}
 
@@ -82,18 +81,18 @@ func GetRenderer(c types.Context, r *http.Request) *renderer.Renderer {
 // GetRenderCtx returns a RenderCtx wrapper around the current raw renderer
 // The wrapper automatically adds the current request ContextData to the
 // renderer's Render method call.
-func GetRenderCtx(c types.Context, r *http.Request) types.RenderCtx {
+func GetRenderCtx(c context.Context, r *http.Request) renderer.RenderCtx {
 	rnd := GetRenderer(c, r)
 
-	return types.RenderCtx(func(w io.Writer, data types.RenderData, names ...string) error {
+	return renderer.RenderCtx(func(w io.Writer, data renderer.RenderData, names ...string) error {
 		return rnd.Render(w, data, c.GetAll(r), names...)
 	})
 }
 
 // GetLogger returns the error logger, to be used if an error occurs during
 // a request.
-func GetLogger(c types.Context, r *http.Request) *log.Logger {
-	if val, ok := c.Get(r, types.BaseCtxKey("logger")); ok {
+func GetLogger(c context.Context, r *http.Request) *log.Logger {
+	if val, ok := c.Get(r, context.BaseCtxKey("logger")); ok {
 		return val.(*log.Logger)
 	}
 

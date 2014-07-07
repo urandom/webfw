@@ -7,7 +7,7 @@ import (
 	"net/http/httptest"
 	"time"
 
-	"github.com/urandom/webfw/types"
+	"github.com/urandom/webfw/context"
 
 	"strings"
 )
@@ -21,7 +21,7 @@ type Logger struct {
 	AccessLogger *log.Logger
 }
 
-func (lmw Logger) Handler(ph http.Handler, c types.Context, l *log.Logger) http.Handler {
+func (lmw Logger) Handler(ph http.Handler, c context.Context, l *log.Logger) http.Handler {
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		rec := httptest.NewRecorder()
 

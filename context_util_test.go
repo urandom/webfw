@@ -7,7 +7,6 @@ import (
 
 	"github.com/urandom/webfw/context"
 	"github.com/urandom/webfw/middleware"
-	"github.com/urandom/webfw/types"
 )
 
 func TestContextUtil(t *testing.T) {
@@ -20,7 +19,7 @@ func TestContextUtil(t *testing.T) {
 	}
 
 	conf.Server.Host = "example.com"
-	c.Set(r, types.BaseCtxKey("config"), conf)
+	c.Set(r, context.BaseCtxKey("config"), conf)
 
 	conf = GetConfig(c, r)
 	if conf.Server.Host != "example.com" {
@@ -33,7 +32,7 @@ func TestContextUtil(t *testing.T) {
 	}
 
 	params["foo"] = "bar"
-	c.Set(r, types.BaseCtxKey("params"), params)
+	c.Set(r, context.BaseCtxKey("params"), params)
 
 	params = GetParams(c, r)
 	if len(params) != 1 {
@@ -55,7 +54,7 @@ func TestContextUtil(t *testing.T) {
 
 	sess.Set("foo", "bar")
 	uuid := sess.Name()
-	c.Set(r, types.BaseCtxKey("session"), sess)
+	c.Set(r, context.BaseCtxKey("session"), sess)
 
 	sess = GetSession(c, r)
 	if sess.Name() != uuid {
@@ -76,7 +75,7 @@ func TestContextUtil(t *testing.T) {
 		t.Fatalf("Expected lang to be '%s', got '%s'\n", middleware.FallbackLocale(c, r), lang)
 	}
 
-	c.Set(r, types.BaseCtxKey("lang"), "ZZ")
+	c.Set(r, context.BaseCtxKey("lang"), "ZZ")
 
 	lang = GetLanguage(c, r)
 	if lang != "ZZ" {

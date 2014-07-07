@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"net/url"
 	"strings"
-
-	"github.com/urandom/webfw/types"
 )
 
 // Trie is an object that stores routes in a prefix tree, and allows for
@@ -20,19 +18,19 @@ import (
 // value.
 type Trie struct {
 	root  *node
-	named map[types.Method]map[string]*node
+	named map[Method]map[string]*node
 }
 
 type node struct {
-	routes   map[types.Method]*Route
+	routes   map[Method]*Route
 	nodeType nodeType
 	param    string
 	children map[string]*node
 }
 
 type Match struct {
-	routes map[types.Method]*Route
-	params types.RouteParams
+	routes map[Method]*Route
+	params RouteParams
 }
 
 type nodeType int
@@ -43,7 +41,7 @@ const (
 	glob
 )
 
-var methods []types.Method = []types.Method{types.MethodGet, types.MethodPost, types.MethodPut, types.MethodDelete}
+var methods []Method = []Method{MethodGet, MethodPost, MethodPut, MethodDelete}
 
 // NewTrie creates a new Route trie, for efficient lookup of routes and names.
 func NewTrie() *Trie {
@@ -82,7 +80,7 @@ func (t *Trie) AddRoute(route *Route) error {
 		if route.Method&method > 0 {
 			if route.Name != "" {
 				if t.named == nil {
-					t.named = map[types.Method]map[string]*node{}
+					t.named = map[Method]map[string]*node{}
 				}
 				if t.named[method] == nil {
 					t.named[method] = map[string]*node{}
@@ -97,15 +95,15 @@ func (t *Trie) AddRoute(route *Route) error {
 
 // Lookup searches for routes registered for the given path and method, and
 // returns then in the form of a Match object
-func (t *Trie) Lookup(path string, method types.Method) (Match, bool) {
+func (t *Trie) Lookup(path string, method Method) (Match, bool) {
 	match := Match{}
 
-	node, params, found := t.root.lookup(path, types.RouteParams{})
+	node, params, found := t.root.lookup(path, RouteParams{})
 	if found {
 		for key, val := range node.routes {
 			if method&key > 0 {
 				if match.routes == nil {
-					match.routes = map[types.Method]*Route{}
+					match.routes = map[Method]*Route{}
 				}
 				match.routes[key] = val
 			}
@@ -120,7 +118,7 @@ func (t *Trie) Lookup(path string, method types.Method) (Match, bool) {
 }
 
 // LookupNamed searches for routes registered under the given name
-func (t *Trie) LookupNamed(name string, method types.Method) (Match, bool) {
+func (t *Trie) LookupNamed(name string, method Method) (Match, bool) {
 	match, found := Match{}, false
 	for _, m := range methods {
 		if method&m > 0 {
@@ -128,7 +126,7 @@ func (t *Trie) LookupNamed(name string, method types.Method) (Match, bool) {
 				if node, ok := names[name]; ok {
 					found = true
 					if match.routes == nil {
-						match.routes = map[types.Method]*Route{}
+						match.routes = map[Method]*Route{}
 					}
 					match.routes[m] = node.routes[m]
 				}
@@ -211,15 +209,15 @@ func (n *node) add(term string, route *Route, params []string, t *Trie) (*node, 
 	}
 }
 
-func (n *node) addRouteForMethod(route *Route, method types.Method) error {
+func (n *node) addRouteForMethod(route *Route, method Method) error {
 	if n.routes == nil {
-		n.routes = map[types.Method]*Route{}
+		n.routes = map[Method]*Route{}
 	}
 
 	if _, ok := n.routes[method]; ok {
 		return errors.New(
 			fmt.Sprintf("A route for the same pattern '%s' and method '%s' already exists!",
-				route.Pattern, types.MethodNames[method]),
+				route.Pattern, MethodNames[method]),
 		)
 	}
 	n.routes[method] = route
@@ -227,7 +225,7 @@ func (n *node) addRouteForMethod(route *Route, method types.Method) error {
 	return nil
 }
 
-func (n *node) lookup(term string, params types.RouteParams) (*node, types.RouteParams, bool) {
+func (n *node) lookup(term string, params RouteParams) (*node, RouteParams, bool) {
 	if term == "" {
 		return n, params, true
 	}
