@@ -25,6 +25,11 @@ time.Duration string format. The "cleanup-interval" setting specifies a
 time.Ticker duration. On each tick, any file system session data will be
 removed, if its older than "cleanup-max-age". If the later setting is empty,
 all session data will be deleted.
+
+If the session middleware is initialized and registered to a dispatcher
+manually, it is possible to set the 'SessionGenerator' struct field, so that
+a different session implementation may be used. If that is not set,
+session.NewSession will be used.
 */
 type Session struct {
 	Path            string
@@ -32,6 +37,8 @@ type Session struct {
 	MaxAge          string
 	CleanupInterval string
 	CleanupMaxAge   string
+
+	SessionGenerator context.SessionGenerator
 }
 
 func (smw Session) Handler(ph http.Handler, c context.Context, l *log.Logger) http.Handler {
@@ -85,7 +92,13 @@ func (smw Session) Handler(ph http.Handler, c context.Context, l *log.Logger) ht
 
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		firstTimer := false
-		sess := context.NewSession(smw.Secret, abspath)
+		var sess context.Session
+
+		if smw.SessionGenerator == nil {
+			sess = context.NewSession(smw.Secret, abspath)
+		} else {
+			sess = smw.SessionGenerator(smw.Secret, abspath)
+		}
 		sess.SetMaxAge(maxAge)
 
 		err := sess.Read(r, c)

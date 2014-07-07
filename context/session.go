@@ -58,6 +58,8 @@ type Session interface {
 	SetFlash(interface{}, interface{})
 }
 
+type SessionGenerator func(secret []byte, path string) Session
+
 type SessionValues map[interface{}]interface{}
 type FlashValues map[interface{}]interface{}
 
