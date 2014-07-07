@@ -21,6 +21,8 @@ type Logger struct {
 	AccessLogger *log.Logger
 }
 
+const dateFormat = "Jan 2, 2006 at 3:04pm (MST)"
+
 func (lmw Logger) Handler(ph http.Handler, c context.Context, l *log.Logger) http.Handler {
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		rec := httptest.NewRecorder()

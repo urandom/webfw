@@ -1,4 +1,4 @@
-package middleware
+package webfw
 
 import (
 	"log"
@@ -6,8 +6,6 @@ import (
 
 	"github.com/urandom/webfw/context"
 )
-
-const dateFormat = "Jan 2, 2006 at 3:04pm (MST)"
 
 /*
 The middleware interface defines a method which receives a parent
