@@ -5,7 +5,7 @@ A simple collection of things for writing web stuff.
 
 Docs and examples are avaiable at [godoc](http://godoc.org/github.com/urandom/webfw)
 
-A quick example, straight from the docs:
+A quick example, straight from the docs (the later is always up-to-date):
 
 1. The code
     ```go
@@ -21,24 +21,25 @@ A quick example, straight from the docs:
     )
     
     type Hello struct {
-    	controller.Base
+            webfw.BaseController
     }
     
     func NewHello(pattern string) Hello {
-    	return Hello{controller.New(pattern, types.MethodAll, "")}
+            return Hello{webfw.NewBaseController(pattern, MethodAll, "")}
     }
     
     func (con Hello) Handler(c *context.Context) http.HandlerFunc {
-    	return func(w http.ResponseWriter, r *http.Request) {
-    		params := webfw.GetParams(c, r)
-    		d := types.RenderData{"name": params["name"]}
-    
-    		err := webfw.GetRenderCtx(c, r)(w, d, "hello.tmpl")
-    		if err != nil {
-    			webfw.GetLogger(c, r).Print(err)
-    		}
-    	}
+            return func(w http.ResponseWriter, r *http.Request) {
+                    params := webfw.GetParams(c, r)
+                    d := renderer.RenderData{"name": params["name"]}
+
+                    err := webfw.GetRenderCtx(c, r)(w, d, "hello.tmpl")
+                    if err != nil {
+                            webfw.GetLogger(c, r).Print(err)
+                    }
+            }
     }
+
     
     func Example() {
     	s := webfw.NewServer()
