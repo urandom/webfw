@@ -16,8 +16,6 @@ A quick example, straight from the docs (the later is always up-to-date):
     
     	"github.com/urandom/webfw"
     	"github.com/urandom/webfw/context"
-    	"github.com/urandom/webfw/controller"
-    	"github.com/urandom/webfw/types"
     )
     
     type Hello struct {
