@@ -64,5 +64,14 @@ func (s *Server) ListenAndServe() error {
 		http.Handle(p, d)
 	}
 
-	return http.ListenAndServe(fmt.Sprintf("%s:%d", s.host, s.port), nil)
+	if s.conf.Server.CertFile != "" && s.conf.Server.KeyFile != "" {
+		return http.ListenAndServeTLS(
+			fmt.Sprintf("%s:%d", s.host, s.port),
+			s.conf.Server.CertFile,
+			s.conf.Server.KeyFile,
+			nil,
+		)
+	} else {
+		return http.ListenAndServe(fmt.Sprintf("%s:%d", s.host, s.port), nil)
+	}
 }

@@ -9,9 +9,11 @@ import (
 
 type Config struct {
 	Server struct {
-		Host  string
-		Port  int
-		Devel bool
+		Host     string
+		Port     int
+		CertFile string `gcfg:"cert-file"`
+		KeyFile  string `gcfg:"key-file"`
+		Devel    bool
 	}
 	Renderer struct {
 		Base string
