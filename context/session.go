@@ -2,7 +2,10 @@ package context
 
 import (
 	"bytes"
+	"crypto/aes"
+	"crypto/cipher"
 	"crypto/hmac"
+	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/gob"
@@ -58,7 +61,7 @@ type Session interface {
 	SetFlash(interface{}, interface{})
 }
 
-type SessionGenerator func(secret []byte, path string) Session
+type SessionGenerator func(secret, cipher []byte, path string) Session
 
 type SessionValues map[interface{}]interface{}
 type FlashValues map[interface{}]interface{}
@@ -70,6 +73,7 @@ type session struct {
 	maxAge     time.Duration
 	values     SessionValues
 	secret     []byte
+	cipher     []byte
 	cookieName string
 	mutex      sync.RWMutex
 }
@@ -86,12 +90,13 @@ type contextKey string
 var fsMutex sync.RWMutex
 
 // NewSession creates a new session object.
-func NewSession(secret []byte, path string) Session {
+func NewSession(secret, cipher []byte, path string) Session {
 	return &session{
 		Path:       path,
 		maxAge:     time.Hour,
 		values:     SessionValues{},
 		secret:     secret,
+		cipher:     cipher,
 		cookieName: "session",
 	}
 }
@@ -136,7 +141,7 @@ func (s *session) Read(r *http.Request, c Context) error {
 	d := http.Dir(s.Path)
 
 	if cookie, err := r.Cookie(s.cookieName); err == nil {
-		name, date, err := decodeName(s.cookieName, cookie.Value, s.secret)
+		name, date, err := s.decodeName(cookie.Value)
 
 		if err != nil {
 			return err
@@ -209,7 +214,7 @@ func (s *session) Write(w http.ResponseWriter) error {
 		return errors.New("http: invalid character in file path")
 	}
 
-	val, date, err := encodeName(s.cookieName, []byte(s.name), s.secret)
+	val, date, err := s.encodeName()
 
 	if err != nil {
 		return err
@@ -374,7 +379,7 @@ func (s *session) fromData(data *fileData) {
 	s.cookieName = data.CookieName
 }
 
-func decodeName(cookieName, data string, secret []byte) (string, int64, error) {
+func (s *session) decodeName(data string) (string, int64, error) {
 	decoded, err := base64.URLEncoding.DecodeString(data)
 
 	if err != nil {
@@ -392,31 +397,65 @@ func decodeName(cookieName, data string, secret []byte) (string, int64, error) {
 		return "", 0, err
 	}
 
-	if !checkSignature(cookieName, parts[2], parts[0], secret, t1) {
+	sig := parts[2]
+
+	if s.cipher != nil {
+		if b, err := aes.NewCipher(s.cipher); err == nil {
+			size := b.BlockSize()
+			if len(sig) > size {
+				key := sig[:size]
+				sig = sig[size:]
+
+				ctr := cipher.NewCTR(b, key)
+				ctr.XORKeyStream(sig, sig)
+			} else {
+				return "", 0, errors.New("Invalid cookie encryption part")
+			}
+		} else {
+			return "", 0, err
+		}
+	}
+
+	if !s.checkSignature(sig, parts[0], t1) {
 		return "", 0, errors.New("Signatures don't match")
 	}
 
 	return string(parts[0]), t1, nil
 }
 
-func encodeName(cookieName string, name, secret []byte) (string, int64, error) {
+func (s *session) encodeName() (string, int64, error) {
 	now := time.Now().Unix()
 
-	sig, err := createSignature(cookieName, name, secret, now)
+	sig, err := createSignature(s.cookieName, []byte(s.name), s.secret, now)
 
 	if err != nil {
 		return "", 0, err
 	}
 
-	message := []byte(fmt.Sprintf("%s|%d|%s", name, now, sig))
+	if s.cipher != nil {
+		if b, err := aes.NewCipher(s.cipher); err == nil {
+			if key, err := randomData(b.BlockSize()); err == nil {
+				ctr := cipher.NewCTR(b, key)
+				ctr.XORKeyStream(sig, sig)
+
+				sig = append(key, sig...)
+			} else {
+				return "", 0, err
+			}
+		} else {
+			return "", 0, err
+		}
+	}
+
+	message := []byte(fmt.Sprintf("%s|%d|%s", s.name, now, sig))
 
 	encoded := base64.URLEncoding.EncodeToString(message)
 
 	return string(encoded), now, nil
 }
 
-func checkSignature(cookieName string, signature, name, secret []byte, date int64) bool {
-	expected, err := createSignature(cookieName, name, secret, date)
+func (s *session) checkSignature(signature, name []byte, date int64) bool {
+	expected, err := createSignature(s.cookieName, name, s.secret, date)
 	if err != nil {
 		return false
 	}
@@ -448,4 +487,12 @@ func getSessionData(name string, r *http.Request, c Context) (*fileData, bool) {
 	}
 
 	return nil, false
+}
+
+func randomData(size int) ([]byte, error) {
+	data := make([]byte, size)
+	if _, err := rand.Read(data); err != nil {
+		return nil, err
+	}
+	return data, nil
 }

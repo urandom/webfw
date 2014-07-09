@@ -1,6 +1,7 @@
 package webfw
 
 import (
+	"encoding/base64"
 	"fmt"
 	"log"
 	"net/http"
@@ -153,9 +154,17 @@ func (d *Dispatcher) init() {
 				})
 				order = append(order, m)
 			case "Session":
+				var cipher []byte
+				if d.config.Session.Cipher != "" {
+					var err error
+					if cipher, err = base64.StdEncoding.DecodeString(d.config.Session.Cipher); err != nil {
+						panic(err)
+					}
+				}
 				mw = append(mw, middleware.Session{
 					Path:            d.config.Session.Dir,
 					Secret:          []byte(d.config.Session.Secret),
+					Cipher:          cipher,
 					MaxAge:          d.config.Session.MaxAge,
 					CleanupInterval: d.config.Session.CleanupInterval,
 					CleanupMaxAge:   d.config.Session.CleanupMaxAge,

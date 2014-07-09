@@ -30,6 +30,7 @@ type Config struct {
 	Session struct {
 		Dir             string
 		Secret          string
+		Cipher          string // optional: 16, 24 or 32 bytes, base64 encoded
 		MaxAge          string `gcfg:"max-age"`
 		CleanupInterval string `gcfg:"cleanup-interval"`
 		CleanupMaxAge   string `gcfg:"cleanup-max-age"`

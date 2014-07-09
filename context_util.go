@@ -54,7 +54,7 @@ func GetSession(c context.Context, r *http.Request) context.Session {
 		}
 	}
 
-	sess := context.NewSession([]byte(conf.Session.Secret), abspath)
+	sess := context.NewSession([]byte(conf.Session.Secret), []byte(conf.Session.Cipher), abspath)
 	sess.SetName(util.UUID())
 	return sess
 }

@@ -9,6 +9,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 )
@@ -16,7 +17,7 @@ import (
 var secret = []byte("test")
 
 func TestSession(t *testing.T) {
-	s := NewSession(secret, os.TempDir())
+	s := NewSession(secret, nil, os.TempDir())
 	s.SetName("test1")
 
 	if s.Name() != "test1" {
@@ -33,16 +34,16 @@ func TestSession(t *testing.T) {
 
 	context := NewContext()
 	r, _ := http.NewRequest("GET", "http://localhost:8080", nil)
-	addCookie(t, "test2", r)
+	addCookie(t, "test2", r, nil)
 
-	s2 := NewSession(secret, os.TempDir())
+	s2 := NewSession(secret, nil, os.TempDir())
 
 	err := s2.Read(r, context)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	temp := NewSession(secret, os.TempDir())
+	temp := NewSession(secret, nil, os.TempDir())
 
 	err = temp.Read(r, context)
 	if err != nil {
@@ -62,9 +63,9 @@ func TestSession(t *testing.T) {
 	}
 
 	r, _ = http.NewRequest("GET", "http://localhost:8080", nil)
-	addCookie(t, "test3", r)
+	addCookie(t, "test3", r, nil)
 
-	temp = NewSession(secret, os.TempDir())
+	temp = NewSession(secret, nil, os.TempDir())
 
 	if err = temp.Read(r, nil); err != nil && err != ErrExpired && err != ErrNotExist {
 		t.Fatal(err)
@@ -86,9 +87,9 @@ func TestSession(t *testing.T) {
 	}
 
 	r, _ = http.NewRequest("GET", "http://localhost:8080", nil)
-	addCookie(t, "test2", r)
+	addCookie(t, "test2", r, nil)
 
-	s2 = NewSession(secret, os.TempDir())
+	s2 = NewSession(secret, nil, os.TempDir())
 	err = s2.Read(r, context)
 
 	if err != nil {
@@ -104,10 +105,10 @@ func TestSession(t *testing.T) {
 	}
 
 	r, _ = http.NewRequest("GET", "http://localhost:8080", nil)
-	addCookie(t, "test2", r)
+	addCookie(t, "test2", r, nil)
 
 	/* Load from filesystem */
-	s2 = NewSession(secret, os.TempDir())
+	s2 = NewSession(secret, nil, os.TempDir())
 	err = s2.Read(r, nil)
 
 	if err != nil {
@@ -169,13 +170,46 @@ func TestSession(t *testing.T) {
 
 }
 
+func TestSecure(t *testing.T) {
+	cipher, err := base64.StdEncoding.DecodeString(`HsPW6w85KMiTNm7q5ZaruE/f3Hl9wlKFYP8AyYF/N7s=`)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	s := NewSession(secret, cipher, os.TempDir())
+	s.SetName("test4")
+
+	s.Set("foo", "bar")
+
+	r, _ := http.NewRequest("GET", "http://localhost:8080/some/url", nil)
+	rec := httptest.NewRecorder()
+
+	if err := s.Write(rec); err != nil {
+		t.Fatal(err)
+	}
+
+	cookie := rec.Header().Get("Set-Cookie")
+	r.Header.Set("Cookie", cookie[:strings.Index(cookie, ";")])
+
+	context := NewContext()
+
+	s = NewSession(secret, cipher, os.TempDir())
+	if err := s.Read(r, context); err != nil {
+		t.Fatal(err)
+	}
+
+	if v, ok := s.Get("foo"); !ok || v.(string) != "bar" {
+		t.Fatalf("Expected value for `foo` to be 'bar', got '%s'\n", v.(string))
+	}
+}
+
 func TestCleanup(t *testing.T) {
 	root := filepath.Join(os.TempDir(), "/sessions/")
 
 	r, _ := http.NewRequest("GET", "http://localhost:8080", nil)
-	addCookie(t, "test1", r)
+	addCookie(t, "test1", r, nil)
 
-	s := NewSession(secret, root)
+	s := NewSession(secret, nil, root)
 
 	if err := s.Read(r, nil); err != nil && err != ErrExpired && err != ErrNotExist {
 		t.Fatal(err)
@@ -195,9 +229,9 @@ func TestCleanup(t *testing.T) {
 	}
 
 	r, _ = http.NewRequest("GET", "http://localhost:8080", nil)
-	addCookie(t, "test2", r)
+	addCookie(t, "test2", r, nil)
 
-	s = NewSession(secret, root)
+	s = NewSession(secret, nil, root)
 
 	s.Read(r, nil)
 
@@ -209,9 +243,9 @@ func TestCleanup(t *testing.T) {
 	}
 
 	r, _ = http.NewRequest("GET", "http://localhost:8080", nil)
-	addCookie(t, "test1", r)
+	addCookie(t, "test1", r, nil)
 
-	s = NewSession(secret, root)
+	s = NewSession(secret, nil, root)
 
 	s.Read(r, nil)
 
@@ -224,9 +258,9 @@ func TestCleanup(t *testing.T) {
 	}
 
 	r, _ = http.NewRequest("GET", "http://localhost:8080", nil)
-	addCookie(t, "test3", r)
+	addCookie(t, "test3", r, nil)
 
-	s = NewSession(secret, root)
+	s = NewSession(secret, nil, root)
 
 	s.Read(r, nil)
 	s.SetMaxAge(time.Second)
@@ -235,7 +269,7 @@ func TestCleanup(t *testing.T) {
 	rec = httptest.NewRecorder()
 	s.Write(rec)
 
-	s = NewSession(secret, root)
+	s = NewSession(secret, nil, root)
 	s.SetName("test3")
 
 	if err := s.Read(r, nil); err != nil {
@@ -244,7 +278,7 @@ func TestCleanup(t *testing.T) {
 
 	time.Sleep(2 * time.Second)
 
-	s = NewSession(secret, root)
+	s = NewSession(secret, nil, root)
 	s.SetName("test3")
 
 	if err := s.Read(r, nil); err != ErrExpired {
@@ -269,7 +303,7 @@ func TestCleanup(t *testing.T) {
 
 }
 
-func addCookie(t *testing.T, name string, r *http.Request) {
+func addCookie(t *testing.T, name string, r *http.Request, cipher []byte) {
 	now := time.Now().Unix()
 	hm := hmac.New(sha256.New, secret)
 

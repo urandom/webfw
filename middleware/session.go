@@ -34,6 +34,7 @@ session.NewSession will be used.
 type Session struct {
 	Path            string
 	Secret          []byte
+	Cipher          []byte
 	MaxAge          string
 	CleanupInterval string
 	CleanupMaxAge   string
@@ -95,9 +96,9 @@ func (smw Session) Handler(ph http.Handler, c context.Context, l *log.Logger) ht
 		var sess context.Session
 
 		if smw.SessionGenerator == nil {
-			sess = context.NewSession(smw.Secret, abspath)
+			sess = context.NewSession(smw.Secret, smw.Cipher, abspath)
 		} else {
-			sess = smw.SessionGenerator(smw.Secret, abspath)
+			sess = smw.SessionGenerator(smw.Secret, smw.Cipher, abspath)
 		}
 		sess.SetMaxAge(maxAge)
 
