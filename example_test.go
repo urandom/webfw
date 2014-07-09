@@ -13,10 +13,10 @@ type Hello struct {
 }
 
 func NewHello(pattern string) Hello {
-	return Hello{webfw.NewBaseController(pattern, MethodAll, "")}
+	return Hello{webfw.NewBaseController(pattern, webfw.MethodAll, "")}
 }
 
-func (con Hello) Handler(c *context.Context) http.HandlerFunc {
+func (con Hello) Handler(c context.Context) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		params := webfw.GetParams(c, r)
 		d := renderer.RenderData{"name": params["name"]}
