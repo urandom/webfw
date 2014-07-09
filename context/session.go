@@ -73,7 +73,7 @@ type session struct {
 	maxAge     time.Duration
 	values     SessionValues
 	secret     []byte
-	cipher     []byte
+	block      cipher.Block
 	cookieName string
 	mutex      sync.RWMutex
 }
@@ -91,14 +91,23 @@ var fsMutex sync.RWMutex
 
 // NewSession creates a new session object.
 func NewSession(secret, cipher []byte, path string) Session {
-	return &session{
+	s := &session{
 		Path:       path,
 		maxAge:     time.Hour,
 		values:     SessionValues{},
 		secret:     secret,
-		cipher:     cipher,
 		cookieName: "session",
 	}
+
+	if cipher != nil && len(cipher) > 0 {
+		if b, err := aes.NewCipher(cipher); err == nil {
+			s.block = b
+		} else {
+			panic(err)
+		}
+	}
+
+	return s
 }
 
 // CleanupSessions is a helper function for clearing all session data
@@ -399,20 +408,16 @@ func (s *session) decodeName(data string) (string, int64, error) {
 
 	sig := parts[2]
 
-	if s.cipher != nil {
-		if b, err := aes.NewCipher(s.cipher); err == nil {
-			size := b.BlockSize()
-			if len(sig) > size {
-				key := sig[:size]
-				sig = sig[size:]
+	if s.block != nil {
+		size := s.block.BlockSize()
+		if len(sig) > size {
+			key := sig[:size]
+			sig = sig[size:]
 
-				ctr := cipher.NewCTR(b, key)
-				ctr.XORKeyStream(sig, sig)
-			} else {
-				return "", 0, errors.New("Invalid cookie encryption part")
-			}
+			ctr := cipher.NewCTR(s.block, key)
+			ctr.XORKeyStream(sig, sig)
 		} else {
-			return "", 0, err
+			return "", 0, errors.New("Invalid cookie encryption part")
 		}
 	}
 
@@ -432,16 +437,12 @@ func (s *session) encodeName() (string, int64, error) {
 		return "", 0, err
 	}
 
-	if s.cipher != nil {
-		if b, err := aes.NewCipher(s.cipher); err == nil {
-			if key, err := randomData(b.BlockSize()); err == nil {
-				ctr := cipher.NewCTR(b, key)
-				ctr.XORKeyStream(sig, sig)
+	if s.block != nil {
+		if key, err := randomData(s.block.BlockSize()); err == nil {
+			ctr := cipher.NewCTR(s.block, key)
+			ctr.XORKeyStream(sig, sig)
 
-				sig = append(key, sig...)
-			} else {
-				return "", 0, err
-			}
+			sig = append(key, sig...)
 		} else {
 			return "", 0, err
 		}
