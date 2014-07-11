@@ -31,8 +31,9 @@ type node struct {
 }
 
 type Match struct {
-	RouteMap RouteMap
-	Params   RouteParams
+	RouteMap   RouteMap
+	Params     RouteParams
+	ReverseURL map[Method]string
 }
 
 type nodeType int
@@ -120,7 +121,7 @@ func (t *Trie) Lookup(path string, method Method) (Match, bool) {
 }
 
 // LookupNamed searches for routes registered under the given name
-func (t *Trie) LookupNamed(name string, method Method) (Match, bool) {
+func (t *Trie) LookupNamed(name string, method Method, params ...RouteParams) (Match, bool) {
 	match, found := Match{}, false
 	for _, m := range methods {
 		if method&m > 0 {
@@ -131,6 +132,16 @@ func (t *Trie) LookupNamed(name string, method Method) (Match, bool) {
 						match.RouteMap = RouteMap{}
 					}
 					match.RouteMap[m] = node.routes[m]
+
+					if match.ReverseURL == nil {
+						match.ReverseURL = map[Method]string{}
+					}
+
+					pattern := node.routes[m].Pattern
+					if len(params) > 0 && params[0] != nil {
+						pattern = replaceParams(pattern, params[0])
+					}
+					match.ReverseURL[m] = pattern
 				}
 			}
 		}
@@ -280,4 +291,15 @@ func split(tail string) (string, string) {
 	}
 
 	return tail[:i], tail[i:]
+}
+
+func replaceParams(pattern string, params RouteParams) string {
+	for k, v := range params {
+		pattern = strings.Replace(pattern, ":"+k, v, -1)
+	}
+	if i := strings.Index(pattern, "*"); i > 0 && len(pattern) > i {
+		pattern = pattern[:i] + params[pattern[i+1:]]
+	}
+
+	return pattern
 }

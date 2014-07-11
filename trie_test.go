@@ -225,6 +225,13 @@ func TestLookupNamed(t *testing.T) {
 			if r.Pattern != "/f" {
 				t.Fatal()
 			}
+			if rev, ok := m.ReverseURL[MethodPut]; ok {
+				if rev != "/f" {
+					t.Fatalf("Expected reverse url '/f', got '%s'\n", rev)
+				}
+			} else {
+				t.Fatalf("Expected reverse url\n")
+			}
 		} else {
 			t.Fatal()
 		}
@@ -232,6 +239,13 @@ func TestLookupNamed(t *testing.T) {
 		if r, ok := m.RouteMap[MethodDelete]; ok {
 			if r.Pattern != "/f" {
 				t.Fatal()
+			}
+			if rev, ok := m.ReverseURL[MethodDelete]; ok {
+				if rev != "/f" {
+					t.Fatalf("Expected reverse url '/f', got '%s'\n", rev)
+				}
+			} else {
+				t.Fatalf("Expected reverse url\n")
 			}
 		} else {
 			t.Fatal()
@@ -248,6 +262,13 @@ func TestLookupNamed(t *testing.T) {
 		if r, ok := m.RouteMap[MethodDelete]; ok {
 			if r.Pattern != "/b" {
 				t.Fatal()
+			}
+			if rev, ok := m.ReverseURL[MethodDelete]; ok {
+				if rev != "/b" {
+					t.Fatalf("Expected reverse url '/b', got '%s'\n", rev)
+				}
+			} else {
+				t.Fatalf("Expected reverse url\n")
 			}
 		} else {
 			t.Fatal()
