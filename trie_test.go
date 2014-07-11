@@ -193,11 +193,11 @@ func TestLookupNamed(t *testing.T) {
 	trie.AddRoute(Route{Pattern: "/b", Method: MethodAll, Name: "test3"})
 
 	if m, ok := trie.LookupNamed("test1", MethodAll); ok {
-		if len(m.routes) != 2 {
+		if len(m.RouteMap) != 2 {
 			t.Fatal()
 		}
 
-		if r, ok := m.routes[MethodGet]; ok {
+		if r, ok := m.RouteMap[MethodGet]; ok {
 			if r.Pattern != "/f" {
 				t.Fatal()
 			}
@@ -205,7 +205,7 @@ func TestLookupNamed(t *testing.T) {
 			t.Fatal()
 		}
 
-		if r, ok := m.routes[MethodPost]; ok {
+		if r, ok := m.RouteMap[MethodPost]; ok {
 			if r.Pattern != "/f" {
 				t.Fatal()
 			}
@@ -217,11 +217,11 @@ func TestLookupNamed(t *testing.T) {
 	}
 
 	if m, ok := trie.LookupNamed("test2", MethodAll); ok {
-		if len(m.routes) != 2 {
+		if len(m.RouteMap) != 2 {
 			t.Fatal()
 		}
 
-		if r, ok := m.routes[MethodPut]; ok {
+		if r, ok := m.RouteMap[MethodPut]; ok {
 			if r.Pattern != "/f" {
 				t.Fatal()
 			}
@@ -229,7 +229,7 @@ func TestLookupNamed(t *testing.T) {
 			t.Fatal()
 		}
 
-		if r, ok := m.routes[MethodDelete]; ok {
+		if r, ok := m.RouteMap[MethodDelete]; ok {
 			if r.Pattern != "/f" {
 				t.Fatal()
 			}
@@ -241,11 +241,11 @@ func TestLookupNamed(t *testing.T) {
 	}
 
 	if m, ok := trie.LookupNamed("test3", MethodDelete); ok {
-		if len(m.routes) != 1 {
+		if len(m.RouteMap) != 1 {
 			t.Fatal()
 		}
 
-		if r, ok := m.routes[MethodDelete]; ok {
+		if r, ok := m.RouteMap[MethodDelete]; ok {
 			if r.Pattern != "/b" {
 				t.Fatal()
 			}
@@ -262,11 +262,11 @@ func TestLookup(t *testing.T) {
 	trie.AddRoute(Route{Pattern: "/f/:param1/t:param2", Method: MethodGet})
 
 	if match, ok := trie.Lookup("/f/hello/tWorld", MethodAll); ok {
-		if len(match.routes) != 1 {
+		if len(match.RouteMap) != 1 {
 			t.Fatal()
 		}
 
-		if r, ok := match.routes[MethodGet]; ok {
+		if r, ok := match.RouteMap[MethodGet]; ok {
 			if r.Pattern != "/f/:param1/t:param2" {
 				t.Fatal()
 			}
@@ -274,16 +274,16 @@ func TestLookup(t *testing.T) {
 			t.Fatal()
 		}
 
-		if match.params == nil {
+		if match.Params == nil {
 			t.Fatal()
-		} else if len(match.params) != 2 {
+		} else if len(match.Params) != 2 {
 			t.Fatal()
 		} else {
-			if match.params["param1"] != "hello" {
+			if match.Params["param1"] != "hello" {
 				t.Fatal()
 			}
 
-			if match.params["param2"] != "World" {
+			if match.Params["param2"] != "World" {
 				t.Fatal()
 			}
 		}
@@ -296,11 +296,11 @@ func TestLookup(t *testing.T) {
 	}
 
 	if match, ok := trie.Lookup("/f/hello/tWorld", MethodAll); ok {
-		if len(match.routes) != 1 {
+		if len(match.RouteMap) != 1 {
 			t.Fatal()
 		}
 
-		if r, ok := match.routes[MethodGet]; ok {
+		if r, ok := match.RouteMap[MethodGet]; ok {
 			if r.Pattern != "/f/:param1/*glob/conti:nuing" {
 				t.Fatal()
 			}
@@ -308,16 +308,16 @@ func TestLookup(t *testing.T) {
 			t.Fatal()
 		}
 
-		if match.params == nil {
+		if match.Params == nil {
 			t.Fatal()
-		} else if len(match.params) != 2 {
+		} else if len(match.Params) != 2 {
 			t.Fatal()
 		} else {
-			if match.params["param1"] != "hello" {
+			if match.Params["param1"] != "hello" {
 				t.Fatal()
 			}
 
-			if match.params["glob/conti:nuing"] != "tWorld" {
+			if match.Params["glob/conti:nuing"] != "tWorld" {
 				t.Fatal()
 			}
 		}
@@ -328,20 +328,20 @@ func TestLookup(t *testing.T) {
 	trie.AddRoute(Route{Pattern: "/", Method: MethodGet})
 
 	if match, ok := trie.Lookup("/f/hello/tWorld", MethodAll); ok {
-		if len(match.routes) != 1 {
+		if len(match.RouteMap) != 1 {
 			t.Fatal()
 		}
 
-		if match.params == nil {
+		if match.Params == nil {
 			t.Fatal()
-		} else if len(match.params) != 2 {
+		} else if len(match.Params) != 2 {
 			t.Fatal()
 		} else {
-			if match.params["param1"] != "hello" {
+			if match.Params["param1"] != "hello" {
 				t.Fatal()
 			}
 
-			if match.params["glob/conti:nuing"] != "tWorld" {
+			if match.Params["glob/conti:nuing"] != "tWorld" {
 				t.Fatal()
 			}
 		}

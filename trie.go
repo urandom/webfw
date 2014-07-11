@@ -21,16 +21,18 @@ type Trie struct {
 	named map[Method]map[string]*node
 }
 
+type RouteMap map[Method]Route
+
 type node struct {
-	routes   map[Method]Route
+	routes   RouteMap
 	nodeType nodeType
 	param    string
 	children map[string]*node
 }
 
 type Match struct {
-	routes map[Method]Route
-	params RouteParams
+	RouteMap RouteMap
+	Params   RouteParams
 }
 
 type nodeType int
@@ -102,16 +104,16 @@ func (t *Trie) Lookup(path string, method Method) (Match, bool) {
 	if found {
 		for key, val := range node.routes {
 			if method&key > 0 {
-				if match.routes == nil {
-					match.routes = map[Method]Route{}
+				if match.RouteMap == nil {
+					match.RouteMap = RouteMap{}
 				}
-				match.routes[key] = val
+				match.RouteMap[key] = val
 			}
 		}
-		if match.routes == nil {
+		if match.RouteMap == nil {
 			found = false
 		} else {
-			match.params = params
+			match.Params = params
 		}
 	}
 	return match, found
@@ -125,10 +127,10 @@ func (t *Trie) LookupNamed(name string, method Method) (Match, bool) {
 			if names, ok := t.named[m]; ok {
 				if node, ok := names[name]; ok {
 					found = true
-					if match.routes == nil {
-						match.routes = map[Method]Route{}
+					if match.RouteMap == nil {
+						match.RouteMap = RouteMap{}
 					}
-					match.routes[m] = node.routes[m]
+					match.RouteMap[m] = node.routes[m]
 				}
 			}
 		}
@@ -211,7 +213,7 @@ func (n *node) add(term string, route Route, params []string, t *Trie) (*node, e
 
 func (n *node) addRouteForMethod(route Route, method Method) error {
 	if n.routes == nil {
-		n.routes = map[Method]Route{}
+		n.routes = RouteMap{}
 	}
 
 	if _, ok := n.routes[method]; ok {

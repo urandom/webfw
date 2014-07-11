@@ -120,10 +120,10 @@ func (d Dispatcher) handlerFunc() http.Handler {
 
 		if matchFound {
 			if !namedMatch {
-				d.context.Set(r, context.BaseCtxKey("params"), match.params)
+				d.context.Set(r, context.BaseCtxKey("params"), match.Params)
 			}
 
-			route := match.routes[method]
+			route := match.RouteMap[method]
 			route.Handler(w, r)
 
 			if GetForward(d.context, r) != "" || GetNamedForward(d.context, r) != "" {
