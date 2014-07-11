@@ -224,6 +224,30 @@ func TestDispatcherHandle(t *testing.T) {
 	if c4NameParam != "stuff" {
 		t.Fatalf("Expected controller 4 foo parameter to be 'stuff', got '%s'\n", c4NameParam)
 	}
+
+	path := d.NameToPath("named1", MethodAll, RouteParams{"name": "stuff"})
+	if path == "" {
+		t.Fatalf("The named route 'named1' wasn't found\n")
+	}
+
+	if path != "/test/stuff" {
+		t.Fatalf("Expected '/test/stuff', got '%s'\n", path)
+	}
+
+	d = NewDispatcher("/prefix/", Config{})
+
+	d.Handle(c3)
+	d.init()
+
+	path = d.NameToPath("named1", MethodAll, RouteParams{"name": "stuff"})
+	if path == "" {
+		t.Fatalf("The named route 'named1' wasn't found\n")
+	}
+
+	if path != "/prefix/test/stuff" {
+		t.Fatalf("Expected '/prefix/test/stuff', got '%s'\n", path)
+	}
+
 }
 
 type controller struct {

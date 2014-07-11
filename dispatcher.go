@@ -86,6 +86,27 @@ func (d Dispatcher) Handle(c Controller) {
 	}
 }
 
+// NameToPath returns a url path, mapped to the given route name. A method
+// should be specified to further narrow down the search. If more than one
+// methods are matched, the first path is returned. Finally, an optional
+// RouteParams object may be given, to replace any path parameters with their
+// values in the given map. The empty string is returned if no route is found
+// for the given name. The root dispatcher pattern is always prepended to any
+// found path.
+func (d Dispatcher) NameToPath(name string, method Method, params ...RouteParams) string {
+	if match, ok := d.trie.LookupNamed(name, method, params...); ok {
+		for _, v := range match.ReverseURL {
+			if d.pattern != "/" {
+				return d.pattern[:len(d.pattern)-1] + v
+			}
+			return v
+		}
+
+	}
+
+	return ""
+}
+
 func (d Dispatcher) handlerFunc() http.Handler {
 	var handler func(w http.ResponseWriter, r *http.Request)
 
