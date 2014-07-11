@@ -114,3 +114,11 @@ func GetNamedForward(c context.Context, r *http.Request) string {
 	}
 	return ""
 }
+
+// GetDispatcher returns the request dispatcher.
+func GetDispatcher(c context.Context, r *http.Request) Dispatcher {
+	if val, ok := c.Get(r, context.BaseCtxKey("dispatcher")); ok {
+		return val.(Dispatcher)
+	}
+	return Dispatcher{}
+}

@@ -68,7 +68,7 @@ func TestDispatcherMiddlewareRegistration(t *testing.T) {
 
 	d.ServeHTTP(w, r)
 
-	if v, ok := d.context.Get(r, "foo"); !ok || v.(string) != "/test" {
+	if v, ok := d.Context.Get(r, "foo"); !ok || v.(string) != "/test" {
 		t.Fatalf("Expected MyCustomMW to be called be last\n")
 	}
 
@@ -96,7 +96,7 @@ func TestDispatcherMiddlewareRegistration(t *testing.T) {
 
 	d.ServeHTTP(w, r)
 
-	if v, ok := d.context.Get(r, "foo"); !ok || v.(string) != "/another-test" {
+	if v, ok := d.Context.Get(r, "foo"); !ok || v.(string) != "/another-test" {
 		t.Fatalf("Expected MyCustomMW2 to be called be last\n")
 	}
 
@@ -126,8 +126,8 @@ func TestDispatcherHandle(t *testing.T) {
 				t.Fatalf("Expected the url path to be '/hello/World', got %v\n", r.URL.Path)
 			}
 
-			if GetParams(d.context, r)["name"] != "World" {
-				t.Fatalf("Expected the name parameter to be 'World', got %v\n", GetParams(d.context, r)["name"])
+			if GetParams(d.Context, r)["name"] != "World" {
+				t.Fatalf("Expected the name parameter to be 'World', got %v\n", GetParams(d.Context, r)["name"])
 			}
 		},
 	}
@@ -174,9 +174,9 @@ func TestDispatcherHandle(t *testing.T) {
 		name:    "named1",
 		handler: func(w http.ResponseWriter, r *http.Request) {
 			passedC3 = true
-			c3NameParam = GetParams(d.context, r)["name"]
+			c3NameParam = GetParams(d.Context, r)["name"]
 
-			d.context.Set(r, context.BaseCtxKey("forward"), "/test2/stuff")
+			d.Context.Set(r, context.BaseCtxKey("forward"), "/test2/stuff")
 		},
 	}
 
@@ -185,7 +185,7 @@ func TestDispatcherHandle(t *testing.T) {
 		method:  MethodAll,
 		handler: func(w http.ResponseWriter, r *http.Request) {
 			passedC4 = true
-			c4NameParam = GetParams(d.context, r)["foo"]
+			c4NameParam = GetParams(d.Context, r)["foo"]
 		},
 	}
 
