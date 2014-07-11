@@ -33,12 +33,12 @@ type Dispatcher struct {
 }
 
 // NewDispatcher creates a dispatcher for the given base pattern and config.
-func NewDispatcher(pattern string, c Config) *Dispatcher {
+func NewDispatcher(pattern string, c Config) Dispatcher {
 	if !strings.HasSuffix(pattern, "/") {
 		panic("The dispatcher pattern has to end with a '/'")
 	}
 
-	d := &Dispatcher{
+	d := Dispatcher{
 		trie:       NewTrie(),
 		config:     c,
 		pattern:    pattern,
@@ -71,13 +71,13 @@ func (d *Dispatcher) SetContext(context context.Context) {
 }
 
 // ServeHTTP fulfills the net/http's Handler interface.
-func (d *Dispatcher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (d Dispatcher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	d.handler.ServeHTTP(w, r)
 }
 
 // Handle registers the provided controller.
-func (d *Dispatcher) Handle(c Controller) {
-	r := &Route{
+func (d Dispatcher) Handle(c Controller) {
+	r := Route{
 		c.Pattern(), c.Method(), c.Handler(d.context), c.Name(),
 	}
 
@@ -86,7 +86,7 @@ func (d *Dispatcher) Handle(c Controller) {
 	}
 }
 
-func (d *Dispatcher) handlerFunc() http.Handler {
+func (d Dispatcher) handlerFunc() http.Handler {
 	var handler func(w http.ResponseWriter, r *http.Request)
 
 	handler = func(w http.ResponseWriter, r *http.Request) {
