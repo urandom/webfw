@@ -58,15 +58,15 @@ A quick example, straight from the docs (the later is always up-to-date):
 
     2.1 "base.tmpl":
     ```html
-        <!doctype html>
-        <html>
+    <!doctype html>
+    <html>
         <body>{{ template "content" . }}</body>
-        </html>
-        {{ define "content" }}{{ end }}
+    </html>
+    {{ define "content" }}{{ end }}
     ```
     2.2 "hello.tmpl"
     ```html
-        {{ define "content" }}
-        <h1>Hello {{ .name }}</h1>
-        {{ end }}
+    {{ define "content" }}
+    <h1>Hello {{ .name }}</h1>
+    {{ end }}
     ```
