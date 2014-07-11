@@ -98,3 +98,19 @@ func GetLogger(c context.Context, r *http.Request) *log.Logger {
 
 	return log.New(os.Stderr, "", 0)
 }
+
+// GetForwards returns a set forward path as a string, or the empty string.
+func GetForward(c context.Context, r *http.Request) string {
+	if val, ok := c.Get(r, context.BaseCtxKey("forward")); ok {
+		return val.(string)
+	}
+	return ""
+}
+
+// GetNamedForward returns a name, used by the dispatcher to lookup a route to forward to.
+func GetNamedForward(c context.Context, r *http.Request) string {
+	if val, ok := c.Get(r, context.BaseCtxKey("named-forward")); ok {
+		return val.(string)
+	}
+	return ""
+}

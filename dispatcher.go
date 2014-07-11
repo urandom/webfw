@@ -87,23 +87,48 @@ func (d *Dispatcher) Handle(c Controller) {
 }
 
 func (d *Dispatcher) handlerFunc() http.Handler {
-	handler := func(w http.ResponseWriter, r *http.Request) {
-		path := r.URL.RequestURI()
-		method := ReverseMethodNames[r.Method]
+	var handler func(w http.ResponseWriter, r *http.Request)
 
-		if d.pattern != "/" {
-			path = path[len(d.pattern)-1:]
+	handler = func(w http.ResponseWriter, r *http.Request) {
+		var match Match
+		matchFound, namedMatch := false, false
+
+		method := ReverseMethodNames[r.Method]
+		if GetNamedForward(d.context, r) != "" {
+			namedMatch = true
+			match, matchFound = d.trie.LookupNamed(GetNamedForward(d.context, r), method)
+			d.context.Delete(r, context.BaseCtxKey("named-forward"))
+		} else {
+			path := GetForward(d.context, r)
+
+			if path == "" {
+				path = r.URL.RequestURI()
+			} else {
+				d.context.Delete(r, context.BaseCtxKey("forward"))
+			}
+
+			if d.pattern != "/" {
+				path = path[len(d.pattern)-1:]
+			}
+			d.context.Delete(r, context.BaseCtxKey("params"))
+			match, matchFound = d.trie.Lookup(path, method)
 		}
 
 		d.context.Set(r, context.BaseCtxKey("r"), r)
 		d.context.Set(r, context.BaseCtxKey("renderer"), d.renderer)
 		d.context.Set(r, context.BaseCtxKey("logger"), d.logger)
 
-		if match, ok := d.trie.Lookup(path, method); ok {
-			d.context.Set(r, context.BaseCtxKey("params"), match.params)
+		if matchFound {
+			if !namedMatch {
+				d.context.Set(r, context.BaseCtxKey("params"), match.params)
+			}
 
 			route := match.routes[method]
 			route.Handler(w, r)
+
+			if GetForward(d.context, r) != "" || GetNamedForward(d.context, r) != "" {
+				handler(w, r)
+			}
 		} else {
 			w.WriteHeader(http.StatusNotFound)
 

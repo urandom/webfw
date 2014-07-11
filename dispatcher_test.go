@@ -165,6 +165,65 @@ func TestDispatcherHandle(t *testing.T) {
 	if w.Code != http.StatusNotFound {
 		t.Fatalf("Expected StatusNotFound, got %v\n", w.Code)
 	}
+
+	passedC3, passedC4 := false, false
+	c3NameParam, c4NameParam := "", ""
+	c3 := controller{
+		pattern: "/test/:name",
+		method:  MethodAll,
+		name:    "named1",
+		handler: func(w http.ResponseWriter, r *http.Request) {
+			passedC3 = true
+			c3NameParam = GetParams(d.context, r)["name"]
+
+			d.context.Set(r, context.BaseCtxKey("forward"), "/test2/stuff")
+		},
+	}
+
+	c4 := controller{
+		pattern: "/test2/:foo",
+		method:  MethodAll,
+		handler: func(w http.ResponseWriter, r *http.Request) {
+			passedC4 = true
+			c4NameParam = GetParams(d.context, r)["foo"]
+		},
+	}
+
+	passedMW3 := new(bool)
+	*passedMW3 = false
+	mw := MyCustomMW3{passed: passedMW3}
+
+	d = NewDispatcher("/", Config{})
+
+	d.Handle(c3)
+	d.Handle(c4)
+	d.RegisterMiddleware(mw)
+
+	r, _ = http.NewRequest("GET", "http://localhost:8080/", nil)
+	w = httptest.NewRecorder()
+
+	d.init()
+	d.ServeHTTP(w, r)
+
+	if !*passedMW3 {
+		t.Fatalf("Expected to pass through middleware 3\n")
+	}
+
+	if !passedC3 {
+		t.Fatalf("Expected to pass through controller 3\n")
+	}
+
+	if !passedC4 {
+		t.Fatalf("Expected to pass through controller 4\n")
+	}
+
+	if c3NameParam != "foo" {
+		t.Fatalf("Expected controller 3 name parameter to be 'foo', got '%s'\n", c3NameParam)
+	}
+
+	if c4NameParam != "stuff" {
+		t.Fatalf("Expected controller 4 foo parameter to be 'stuff', got '%s'\n", c4NameParam)
+	}
 }
 
 type controller struct {
@@ -212,6 +271,21 @@ func (mmw MyCustomMW2) Handler(ph http.Handler, c context.Context, l *log.Logger
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		r.URL.Path = mmw.to
 		c.Set(r, "foo", mmw.to)
+		ph.ServeHTTP(w, r)
+	}
+
+	return http.HandlerFunc(handler)
+}
+
+type MyCustomMW3 struct {
+	passed *bool
+}
+
+func (mmw MyCustomMW3) Handler(ph http.Handler, c context.Context, l *log.Logger) http.Handler {
+	handler := func(w http.ResponseWriter, r *http.Request) {
+		*mmw.passed = true
+		c.Set(r, context.BaseCtxKey("named-forward"), "named1")
+		c.Set(r, context.BaseCtxKey("params"), RouteParams{"name": "foo"})
 		ph.ServeHTTP(w, r)
 	}
 
