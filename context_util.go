@@ -14,14 +14,41 @@ import (
 	"github.com/urandom/webfw/util"
 )
 
+// GetDispatcher returns the request dispatcher.
+func GetDispatcher(c context.Context) Dispatcher {
+	if val, ok := c.GetGlobal(context.BaseCtxKey("dispatcher")); ok {
+		return val.(Dispatcher)
+	}
+	return Dispatcher{}
+}
+
 // GetConfig is a helper function for getting the current config
 // from the request context.
-func GetConfig(c context.Context, r *http.Request) Config {
-	if val, ok := c.Get(r, context.BaseCtxKey("config")); ok {
+func GetConfig(c context.Context) Config {
+	if val, ok := c.GetGlobal(context.BaseCtxKey("config")); ok {
 		return val.(Config)
 	}
 
 	return Config{}
+}
+
+// GetRenderer returns the current raw renderer from the context.
+func GetRenderer(c context.Context) *renderer.Renderer {
+	if val, ok := c.GetGlobal(context.BaseCtxKey("renderer")); ok {
+		return val.(*renderer.Renderer)
+	}
+
+	return renderer.NewRenderer("template", "base.tmpl")
+}
+
+// GetLogger returns the error logger, to be used if an error occurs during
+// a request.
+func GetLogger(c context.Context) *log.Logger {
+	if val, ok := c.GetGlobal(context.BaseCtxKey("logger")); ok {
+		return val.(*log.Logger)
+	}
+
+	return log.New(os.Stderr, "", 0)
 }
 
 // GetParams returns the current request path parameters from the context.
@@ -40,7 +67,7 @@ func GetSession(c context.Context, r *http.Request) context.Session {
 		return val.(context.Session)
 	}
 
-	conf := GetConfig(c, r)
+	conf := GetConfig(c)
 	var abspath string
 
 	if filepath.IsAbs(conf.Session.Dir) {
@@ -69,34 +96,15 @@ func GetLanguage(c context.Context, r *http.Request) string {
 	return middleware.FallbackLocale(c, r)
 }
 
-// GetRenderer returns the current raw renderer from the context.
-func GetRenderer(c context.Context, r *http.Request) *renderer.Renderer {
-	if val, ok := c.Get(r, context.BaseCtxKey("renderer")); ok {
-		return val.(*renderer.Renderer)
-	}
-
-	return renderer.NewRenderer("template", "base.tmpl")
-}
-
 // GetRenderCtx returns a RenderCtx wrapper around the current raw renderer
 // The wrapper automatically adds the current request ContextData to the
 // renderer's Render method call.
 func GetRenderCtx(c context.Context, r *http.Request) renderer.RenderCtx {
-	rnd := GetRenderer(c, r)
+	rnd := GetRenderer(c)
 
 	return renderer.RenderCtx(func(w io.Writer, data renderer.RenderData, names ...string) error {
 		return rnd.Render(w, data, c.GetAll(r), names...)
 	})
-}
-
-// GetLogger returns the error logger, to be used if an error occurs during
-// a request.
-func GetLogger(c context.Context, r *http.Request) *log.Logger {
-	if val, ok := c.Get(r, context.BaseCtxKey("logger")); ok {
-		return val.(*log.Logger)
-	}
-
-	return log.New(os.Stderr, "", 0)
 }
 
 // GetForwards returns a set forward path as a string, or the empty string.
@@ -113,12 +121,4 @@ func GetNamedForward(c context.Context, r *http.Request) string {
 		return val.(string)
 	}
 	return ""
-}
-
-// GetDispatcher returns the request dispatcher.
-func GetDispatcher(c context.Context, r *http.Request) Dispatcher {
-	if val, ok := c.Get(r, context.BaseCtxKey("dispatcher")); ok {
-		return val.(Dispatcher)
-	}
-	return Dispatcher{}
 }

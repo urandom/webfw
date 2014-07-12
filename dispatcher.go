@@ -21,14 +21,14 @@ import (
 // configuration. Multiple dispatchers may be created, and each one is
 // defined by a ServerMux root pattern. The pattern must end in a '/'.
 type Dispatcher struct {
-	Pattern string
-	Context context.Context
-	Config  Config
-	Logger  *log.Logger
+	Pattern  string
+	Context  context.Context
+	Config   Config
+	Logger   *log.Logger
+	Renderer *renderer.Renderer
 
 	trie            *Trie
 	handler         http.Handler
-	renderer        *renderer.Renderer
 	middleware      map[string]Middleware
 	middlewareOrder []string
 }
@@ -131,8 +131,6 @@ func (d Dispatcher) handlerFunc() http.Handler {
 		}
 
 		d.Context.Set(r, context.BaseCtxKey("r"), r)
-		d.Context.Set(r, context.BaseCtxKey("renderer"), d.renderer)
-		d.Context.Set(r, context.BaseCtxKey("logger"), d.Logger)
 
 		if matchFound {
 			if !namedMatch {
@@ -159,7 +157,12 @@ func (d Dispatcher) handlerFunc() http.Handler {
 }
 
 func (d *Dispatcher) init() {
-	d.renderer = renderer.NewRenderer(d.Config.Renderer.Dir, d.Config.Renderer.Base)
+	d.Renderer = renderer.NewRenderer(d.Config.Renderer.Dir, d.Config.Renderer.Base)
+
+	d.Context.SetGlobal(context.BaseCtxKey("renderer"), d.Renderer)
+	d.Context.SetGlobal(context.BaseCtxKey("logger"), d.Logger)
+	d.Context.SetGlobal(context.BaseCtxKey("dispatcher"), d)
+	d.Context.SetGlobal(context.BaseCtxKey("config"), d.Config)
 
 	var mw []Middleware
 	order := []string{}
@@ -216,13 +219,13 @@ func (d *Dispatcher) init() {
 					Dir:             d.Config.I18n.Dir,
 					Pattern:         d.Pattern,
 					Languages:       d.Config.I18n.Languages,
-					Renderer:        d.renderer,
+					Renderer:        d.Renderer,
 					IgnoreURLPrefix: d.Config.I18n.IgnoreURLPrefix,
 				})
 				order = append(order, m)
 			case "Url":
 				mw = append(mw, middleware.Url{
-					Renderer: d.renderer,
+					Renderer: d.Renderer,
 				})
 				order = append(order, m)
 			}
@@ -245,17 +248,6 @@ func (d *Dispatcher) init() {
 	for _, m := range mw {
 		handler = m.Handler(handler, d.Context, d.Logger)
 	}
-
-	handler = func(ph http.Handler) http.Handler {
-		handler := func(w http.ResponseWriter, r *http.Request) {
-			d.Context.Set(r, context.BaseCtxKey("dispatcher"), d)
-			d.Context.Set(r, context.BaseCtxKey("config"), d.Config)
-
-			ph.ServeHTTP(w, r)
-		}
-
-		return http.HandlerFunc(handler)
-	}(handler)
 
 	d.handler = handler
 	d.middlewareOrder = order

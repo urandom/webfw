@@ -13,17 +13,17 @@ func TestContextUtil(t *testing.T) {
 	c := context.NewContext()
 	r, _ := http.NewRequest("GET", "http://localhost:8080", nil)
 
-	conf := GetConfig(c, r)
+	conf := GetConfig(c)
 	if fmt.Sprintf("%v", conf) != fmt.Sprintf("%v", Config{}) {
 		t.Fatalf("Expected a an empty Config, got %v\n", conf)
 	}
 
 	conf.Server.Host = "example.com"
-	c.Set(r, context.BaseCtxKey("config"), conf)
+	c.SetGlobal(context.BaseCtxKey("config"), conf)
 
-	conf = GetConfig(c, r)
+	conf = GetConfig(c)
 	if conf.Server.Host != "example.com" {
-		t.Fatalf("Expected Server.Host to be 'example.com', got %s\n", conf.Server.Host)
+		t.Fatalf("Expected Server.Host to be 'example.com', got '%s'\n", conf.Server.Host)
 	}
 
 	params := GetParams(c, r)
@@ -82,20 +82,20 @@ func TestContextUtil(t *testing.T) {
 		t.Fatalf("Expected lang to be 'ZZ', got '%s'\n", lang)
 	}
 
-	ren := GetRenderer(c, r)
+	ren := GetRenderer(c)
 	if ren == nil {
 		t.Fatalf("Expected a non-nil renderer\n")
 	}
 
-	log := GetLogger(c, r)
+	log := GetLogger(c)
 	if log == nil {
 		t.Fatalf("Expected a non-nill logger\n")
 	}
 
 	r, _ = http.NewRequest("GET", "http://localhost:8080", nil)
-	conf = GetConfig(c, r)
-	if conf.Server.Host != "" {
-		t.Fatalf("Expected Server.Host to be empty, got %s\n", conf.Server.Host)
+	conf = GetConfig(c)
+	if conf.Server.Host != "example.com" {
+		t.Fatalf("Expected Server.Host to be 'example.com', got '%s'\n", conf.Server.Host)
 	}
 
 	params = GetParams(c, r)
