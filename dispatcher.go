@@ -138,6 +138,8 @@ func (d Dispatcher) handlerFunc() http.Handler {
 			}
 
 			route := match.RouteMap[method]
+
+			d.Context.Set(r, context.BaseCtxKey("route-name"), route.Name)
 			route.Handler(w, r)
 
 			if GetForward(d.Context, r) != "" || GetNamedForward(d.Context, r) != "" {
