@@ -63,7 +63,7 @@ obtained using the ".base.lang" pipeline.
 type I18N struct {
 	Languages       []string
 	Pattern         string
-	Renderer        *renderer.Renderer
+	Renderer        renderer.Renderer
 	Dir             string
 	IgnoreURLPrefix []string
 }

@@ -33,9 +33,9 @@ func GetConfig(c context.Context) Config {
 }
 
 // GetRenderer returns the current raw renderer from the context.
-func GetRenderer(c context.Context) *renderer.Renderer {
+func GetRenderer(c context.Context) renderer.Renderer {
 	if val, ok := c.GetGlobal(context.BaseCtxKey("renderer")); ok {
-		return val.(*renderer.Renderer)
+		return val.(renderer.Renderer)
 	}
 
 	return renderer.NewRenderer("template", "base.tmpl")

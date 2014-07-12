@@ -38,7 +38,7 @@ renderer template. The following functions are currently provided:
     - {{ localizedUrl "/foo" "de" .base.r }} -> /de/foo
 */
 type Url struct {
-	Renderer *renderer.Renderer
+	Renderer renderer.Renderer
 }
 
 func (umw Url) Handler(ph http.Handler, c context.Context, l *log.Logger) http.Handler {

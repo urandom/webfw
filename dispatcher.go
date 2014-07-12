@@ -25,7 +25,7 @@ type Dispatcher struct {
 	Context  context.Context
 	Config   Config
 	Logger   *log.Logger
-	Renderer *renderer.Renderer
+	Renderer renderer.Renderer
 
 	trie            *Trie
 	handler         http.Handler
@@ -102,6 +102,12 @@ func (d Dispatcher) NameToPath(name string, method Method, params ...RouteParams
 	return ""
 }
 
+// SetRenderer assigns the given renderer.Renderer implementation to the
+// dispatcher
+func (d *Dispatcher) SetRenderer(r renderer.Renderer) {
+	d.Renderer = r
+}
+
 func (d Dispatcher) handlerFunc() http.Handler {
 	var handler func(w http.ResponseWriter, r *http.Request)
 
@@ -157,7 +163,9 @@ func (d Dispatcher) handlerFunc() http.Handler {
 }
 
 func (d *Dispatcher) init() {
-	d.Renderer = renderer.NewRenderer(d.Config.Renderer.Dir, d.Config.Renderer.Base)
+	if d.Renderer == nil {
+		d.Renderer = renderer.NewRenderer(d.Config.Renderer.Dir, d.Config.Renderer.Base)
+	}
 
 	d.Context.SetGlobal(context.BaseCtxKey("renderer"), d.Renderer)
 	d.Context.SetGlobal(context.BaseCtxKey("logger"), d.Logger)

@@ -20,7 +20,14 @@ import (
 	"github.com/urandom/webfw/util"
 )
 
-type Renderer struct {
+type Renderer interface {
+	BaseName() string
+	SetBaseName(string)
+	Funcs(template.FuncMap) error
+	Render(w io.Writer, data RenderData, cdata context.ContextData, names ...string) error
+}
+
+type renderer struct {
 	mutex    sync.RWMutex
 	tmpls    map[string]*template.Template
 	path     string
@@ -31,19 +38,29 @@ type RenderCtx func(w io.Writer, data RenderData, names ...string) error
 
 type RenderData map[string]interface{}
 
-// NewRenderer creates a new Renderer object. The path points to a directory
+// NewRenderer creates a new renderer object. The path points to a directory
 // containing the template files. The base is the name of the file for the
 // 'base' template.
-func NewRenderer(path, base string) *Renderer {
-	return &Renderer{
+func NewRenderer(path, base string) Renderer {
+	return &renderer{
 		tmpls:    make(map[string]*template.Template),
 		path:     path,
 		baseName: base,
 	}
 }
 
+// BaseName returns the current base template name
+func (r *renderer) BaseName() string {
+	return r.baseName
+}
+
+// SetBaseName sets a new template base name
+func (r *renderer) SetBaseName(base string) {
+	r.baseName = base
+}
+
 // Funcs registers a template.FuncMap object for the 'base' template.
-func (r *Renderer) Funcs(funcMap template.FuncMap) error {
+func (r *renderer) Funcs(funcMap template.FuncMap) error {
 	t, err := r.base()
 	if err != nil {
 		return err
@@ -69,7 +86,7 @@ func (r *Renderer) Funcs(funcMap template.FuncMap) error {
 //   - "logger", the error logger
 //   - "firstTimer", if the session is newly created
 // The list of data is partially dependant on the middleware chain
-func (r *Renderer) Render(w io.Writer, data RenderData, cdata context.ContextData, names ...string) error {
+func (r *renderer) Render(w io.Writer, data RenderData, cdata context.ContextData, names ...string) error {
 	var tmpl *template.Template
 
 	if len(names) == 0 {
@@ -148,7 +165,7 @@ func (r *Renderer) Render(w io.Writer, data RenderData, cdata context.ContextDat
 	return nil
 }
 
-func (r *Renderer) get(name string) (*template.Template, bool) {
+func (r *renderer) get(name string) (*template.Template, bool) {
 	r.mutex.RLock()
 	defer r.mutex.RUnlock()
 
@@ -157,14 +174,14 @@ func (r *Renderer) get(name string) (*template.Template, bool) {
 	return t, ok
 }
 
-func (r *Renderer) set(name string, t *template.Template) {
+func (r *renderer) set(name string, t *template.Template) {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 
 	r.tmpls[name] = t
 }
 
-func (r *Renderer) base() (*template.Template, error) {
+func (r *renderer) base() (*template.Template, error) {
 	r.mutex.RLock()
 
 	if t, ok := r.tmpls[r.baseName]; ok {
@@ -176,7 +193,7 @@ func (r *Renderer) base() (*template.Template, error) {
 	return r.create(r.baseName)
 }
 
-func (r *Renderer) create(name string) (*template.Template, error) {
+func (r *renderer) create(name string) (*template.Template, error) {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 
