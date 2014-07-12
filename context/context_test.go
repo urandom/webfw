@@ -96,3 +96,22 @@ func TestContext(t *testing.T) {
 		t.Error()
 	}
 }
+
+func TestContextGlobal(t *testing.T) {
+	c := NewContext()
+
+	if v, ok := c.GetGlobal("foo"); ok {
+		t.Fatalf("Expected value for key 'foo' to not exist, got '%s'\n", v)
+	}
+
+	c.SetGlobal("foo", "bar")
+
+	if v, ok := c.GetGlobal("foo"); ok {
+		if v.(string) != "bar" {
+			t.Fatalf("Expected value for key 'foo' to be 'bar', got '%s'\n", v)
+		}
+	} else {
+		t.Fatalf("Expected value for key 'foo' to exist\n")
+	}
+
+}
