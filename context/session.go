@@ -57,7 +57,7 @@ type Session interface {
 	GetAll() SessionValues
 	DeleteAll()
 	Delete(interface{})
-	Flash(interface{}) interface{}
+	Flash(interface{}) (interface{}, bool)
 	SetFlash(interface{}, interface{})
 }
 
@@ -335,7 +335,7 @@ func (s *session) Delete(key interface{}) {
 
 // Flash gets a flash value for a given key from the session.  Flash values
 // are temporary values that are removed when they are fetched.
-func (s *session) Flash(key interface{}) interface{} {
+func (s *session) Flash(key interface{}) (interface{}, bool) {
 	var val interface{}
 
 	if flash, ok := s.Get(contextKey("flashValues")); ok {
@@ -344,11 +344,11 @@ func (s *session) Flash(key interface{}) interface{} {
 		if val, ok = flashValues[key]; ok {
 			delete(flashValues, key)
 
-			return val
+			return val, ok
 		}
 	}
 
-	return val
+	return val, false
 }
 
 // SetFlash stores a flash value under a given key.

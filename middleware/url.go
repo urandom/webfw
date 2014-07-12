@@ -39,6 +39,7 @@ renderer template. The following functions are currently provided:
 */
 type Url struct {
 	Renderer renderer.Renderer
+	Pattern  string
 }
 
 func (umw Url) Handler(ph http.Handler, c context.Context, l *log.Logger) http.Handler {
@@ -49,34 +50,18 @@ func (umw Url) Handler(ph http.Handler, c context.Context, l *log.Logger) http.H
 				return "", err
 			}
 
-			base, err := unlocalizedUrl(r, parts...)
-
-			if err != nil {
-				return "", err
-			}
-
-			if lang, ok := c.Get(r, context.BaseCtxKey("lang")); ok {
-				base = "/" + lang.(string) + base
-			}
-			return base, nil
+			return URL(c, r, umw.Pattern, parts)
 		},
 		"localizedUrl": func(data ...interface{}) (string, error) {
 			var lang string
 			r, parts, err := handleParts(data)
+			if err != nil {
+				return "", err
+			}
 
 			lang, parts = parts[len(parts)-1], parts[:len(parts)-1]
-			if err != nil {
-				return "", err
-			}
 
-			base, err := unlocalizedUrl(r, parts...)
-
-			if err != nil {
-				return "", err
-			}
-
-			base = "/" + lang + base
-			return base, nil
+			return LocalizedURL(c, r, umw.Pattern, lang, parts)
 		},
 	})
 
@@ -85,6 +70,44 @@ func (umw Url) Handler(ph http.Handler, c context.Context, l *log.Logger) http.H
 	}
 
 	return ph
+}
+
+// The URL function provides the functionality of the url template functions
+// for use outside of the template context. The dispatcherPattern is the
+// pattern used by the dispatcher responsible for handling the resulting url.
+// In most cases it will probably be "/".
+func URL(c context.Context, r *http.Request, dispatcherPattern string, parts []string) (string, error) {
+	base, err := unlocalizedUrl(r, parts)
+
+	if err != nil {
+		return "", err
+	}
+
+	if lang, ok := c.Get(r, context.BaseCtxKey("lang")); ok {
+		base = "/" + lang.(string) + base
+	}
+	if len(dispatcherPattern) > 1 {
+		base = dispatcherPattern[:len(dispatcherPattern)-1] + base
+	}
+	return base, nil
+}
+
+// The LocalizedURL function is equivalent to the 'localizedUrl' template
+// function.
+func LocalizedURL(c context.Context, r *http.Request, dispatcherPattern, language string, parts []string) (string, error) {
+	base, err := unlocalizedUrl(r, parts)
+
+	if err != nil {
+		return "", err
+	}
+
+	base = language + base
+	if len(dispatcherPattern) > 1 {
+		base = dispatcherPattern + base
+	} else {
+		base = "/" + base
+	}
+	return base, nil
 }
 
 func handleParts(data []interface{}) (*http.Request, []string, error) {
@@ -111,7 +134,7 @@ func handleParts(data []interface{}) (*http.Request, []string, error) {
 	}
 }
 
-func unlocalizedUrl(r *http.Request, parts ...string) (string, error) {
+func unlocalizedUrl(r *http.Request, parts []string) (string, error) {
 	if len(parts) == 0 {
 		return "", errors.New("No base url given")
 	}

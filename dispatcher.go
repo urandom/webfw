@@ -228,6 +228,7 @@ func (d *Dispatcher) init() {
 			case "Url":
 				mw = append(mw, middleware.Url{
 					Renderer: d.Renderer,
+					Pattern:  d.Pattern,
 				})
 				order = append(order, m)
 			}

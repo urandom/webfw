@@ -148,21 +148,21 @@ func TestSession(t *testing.T) {
 		t.Fatal()
 	}
 
-	flash := s2.Flash("foo")
+	flash, ok := s2.Flash("foo")
 
-	if flash != nil {
+	if ok {
 		t.Fatal()
 	}
 
 	s2.SetFlash("foo", "bar")
 
-	flash = s2.Flash("foo")
+	flash, _ = s2.Flash("foo")
 
 	if flash.(string) != "bar" {
 		t.Fatal()
 	}
 
-	flash = s2.Flash("foo")
+	flash, _ = s2.Flash("foo")
 
 	if flash != nil {
 		t.Fatal()
