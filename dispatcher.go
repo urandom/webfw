@@ -102,12 +102,6 @@ func (d Dispatcher) NameToPath(name string, method Method, params ...RouteParams
 	return ""
 }
 
-// SetRenderer assigns the given renderer.Renderer implementation to the
-// dispatcher
-func (d *Dispatcher) SetRenderer(r renderer.Renderer) {
-	d.Renderer = r
-}
-
 func (d Dispatcher) handlerFunc() http.Handler {
 	var handler func(w http.ResponseWriter, r *http.Request)
 
