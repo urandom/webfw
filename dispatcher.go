@@ -102,63 +102,12 @@ func (d Dispatcher) NameToPath(name string, method Method, params ...RouteParams
 	return ""
 }
 
-func (d Dispatcher) handlerFunc() http.Handler {
-	var handler func(w http.ResponseWriter, r *http.Request)
-
-	handler = func(w http.ResponseWriter, r *http.Request) {
-		var match Match
-		matchFound, namedMatch := false, false
-
-		method := ReverseMethodNames[r.Method]
-		if GetNamedForward(d.Context, r) != "" {
-			namedMatch = true
-			match, matchFound = d.trie.LookupNamed(GetNamedForward(d.Context, r), method)
-			d.Context.Delete(r, context.BaseCtxKey("named-forward"))
-		} else {
-			path := GetForward(d.Context, r)
-
-			if path == "" {
-				path = r.URL.RequestURI()
-			} else {
-				d.Context.Delete(r, context.BaseCtxKey("forward"))
-			}
-
-			if d.Pattern != "/" {
-				path = path[len(d.Pattern)-1:]
-			}
-			d.Context.Delete(r, context.BaseCtxKey("params"))
-			match, matchFound = d.trie.Lookup(path, method)
-		}
-
-		d.Context.Set(r, context.BaseCtxKey("r"), r)
-
-		if matchFound {
-			if !namedMatch {
-				d.Context.Set(r, context.BaseCtxKey("params"), match.Params)
-			}
-
-			route := match.RouteMap[method]
-
-			d.Context.Set(r, context.BaseCtxKey("route-name"), route.Name)
-			route.Handler(w, r)
-
-			if GetForward(d.Context, r) != "" || GetNamedForward(d.Context, r) != "" {
-				handler(w, r)
-			}
-		} else {
-			w.WriteHeader(http.StatusNotFound)
-
-			err := GetRenderCtx(d.Context, r)(w, nil, "404.tmpl")
-			if err != nil {
-				fmt.Print(err)
-			}
-		}
-	}
-
-	return http.HandlerFunc(handler)
-}
-
-func (d *Dispatcher) init() {
+// Initialize creates all configured middleware handlers, producing a chain
+// of functions to be called on each request. This function is called
+// automatically by the Server object, when its ListenAndServe method is
+// called. It should be called directly before calling http.Handle() using
+// the dispatcher when the Server object is not used.
+func (d *Dispatcher) Initialize() {
 	if d.Renderer == nil {
 		d.Renderer = renderer.NewRenderer(d.Config.Renderer.Dir, d.Config.Renderer.Base)
 	}
@@ -256,4 +205,60 @@ func (d *Dispatcher) init() {
 
 	d.handler = handler
 	d.middlewareOrder = order
+}
+
+func (d Dispatcher) handlerFunc() http.Handler {
+	var handler func(w http.ResponseWriter, r *http.Request)
+
+	handler = func(w http.ResponseWriter, r *http.Request) {
+		var match Match
+		matchFound, namedMatch := false, false
+
+		method := ReverseMethodNames[r.Method]
+		if GetNamedForward(d.Context, r) != "" {
+			namedMatch = true
+			match, matchFound = d.trie.LookupNamed(GetNamedForward(d.Context, r), method)
+			d.Context.Delete(r, context.BaseCtxKey("named-forward"))
+		} else {
+			path := GetForward(d.Context, r)
+
+			if path == "" {
+				path = r.URL.RequestURI()
+			} else {
+				d.Context.Delete(r, context.BaseCtxKey("forward"))
+			}
+
+			if d.Pattern != "/" {
+				path = path[len(d.Pattern)-1:]
+			}
+			d.Context.Delete(r, context.BaseCtxKey("params"))
+			match, matchFound = d.trie.Lookup(path, method)
+		}
+
+		d.Context.Set(r, context.BaseCtxKey("r"), r)
+
+		if matchFound {
+			if !namedMatch {
+				d.Context.Set(r, context.BaseCtxKey("params"), match.Params)
+			}
+
+			route := match.RouteMap[method]
+
+			d.Context.Set(r, context.BaseCtxKey("route-name"), route.Name)
+			route.Handler(w, r)
+
+			if GetForward(d.Context, r) != "" || GetNamedForward(d.Context, r) != "" {
+				handler(w, r)
+			}
+		} else {
+			w.WriteHeader(http.StatusNotFound)
+
+			err := GetRenderCtx(d.Context, r)(w, nil, "404.tmpl")
+			if err != nil {
+				fmt.Print(err)
+			}
+		}
+	}
+
+	return http.HandlerFunc(handler)
 }

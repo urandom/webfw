@@ -54,7 +54,7 @@ func TestDispatcherMiddlewareRegistration(t *testing.T) {
 		t.Fatalf("Expected the first custom middleware to be 'MyCustomMW2'")
 	}
 
-	d.init()
+	d.Initialize()
 
 	order := []string{"MyCustomMW", "MyCustomMW2", "Static", "Error"}
 	for i, m := range order {
@@ -82,7 +82,7 @@ func TestDispatcherMiddlewareRegistration(t *testing.T) {
 	d.RegisterMiddleware(mw)
 	d.RegisterMiddleware(mw2)
 
-	d.init()
+	d.Initialize()
 
 	order = []string{"MyCustomMW2", "Static", "MyCustomMW", "Error"}
 	for i, m := range order {
@@ -104,7 +104,7 @@ func TestDispatcherMiddlewareRegistration(t *testing.T) {
 
 func TestDispatcherHandle(t *testing.T) {
 	d := NewDispatcher("/", Config{})
-	d.init()
+	d.Initialize()
 
 	c1 := controller{
 		pattern: "/",
@@ -202,7 +202,7 @@ func TestDispatcherHandle(t *testing.T) {
 	r, _ = http.NewRequest("GET", "http://localhost:8080/", nil)
 	w = httptest.NewRecorder()
 
-	d.init()
+	d.Initialize()
 	d.ServeHTTP(w, r)
 
 	if !*passedMW3 {
@@ -237,7 +237,7 @@ func TestDispatcherHandle(t *testing.T) {
 	d = NewDispatcher("/prefix/", Config{})
 
 	d.Handle(c3)
-	d.init()
+	d.Initialize()
 
 	path = d.NameToPath("named1", MethodAll, RouteParams{"name": "stuff"})
 	if path == "" {

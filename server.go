@@ -60,7 +60,7 @@ func (s *Server) Dispatcher(pattern string) Dispatcher {
 // http.ListenAndServe function for the current server configuration
 func (s Server) ListenAndServe() error {
 	for p, d := range s.dispatchers {
-		d.init()
+		d.Initialize()
 		http.Handle(p, d)
 	}
 
