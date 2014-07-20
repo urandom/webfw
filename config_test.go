@@ -109,12 +109,14 @@ var conf = `
     dir = tempdir
 
 [dispatcher]
+	middleware
     middleware = Session
     middleware = Static
     middleware = Logger
 
 [i18n]
     dir = langdir
+	language
     language = fr
     language = de
 `

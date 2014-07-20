@@ -2,7 +2,6 @@ package webfw
 
 import (
 	"os"
-	"reflect"
 
 	"code.google.com/p/gcfg"
 )
@@ -60,7 +59,6 @@ func ReadConfig(path ...string) (Config, error) {
 	}
 
 	c := def
-	clearSlices(&c)
 
 	err = gcfg.ReadFileInto(&c, path[0])
 
@@ -91,7 +89,6 @@ func ParseConfig(cfg ...string) (Config, error) {
 	}
 
 	c := def
-	clearSlices(&c)
 
 	err = gcfg.ReadStringInto(&c, cfg[0])
 
@@ -114,30 +111,6 @@ func defaultConfig() (Config, error) {
 	return def, nil
 }
 
-func clearSlices(dst *Config) {
-	vDst := reflect.ValueOf(dst).Elem()
-
-	deepClearSlices(vDst)
-}
-
-func deepClearSlices(dst reflect.Value) {
-	if !dst.IsValid() {
-		return
-	}
-
-	switch dst.Kind() {
-	case reflect.Struct:
-		for i, n := 0, dst.NumField(); i < n; i++ {
-			deepClearSlices(dst.Field(i))
-		}
-	case reflect.Slice:
-		if dst.CanSet() {
-			tmp := reflect.MakeSlice(dst.Type(), 0, 0)
-			dst.Set(tmp)
-		}
-	}
-}
-
 // Default configuration:
 var cfg string = `
 [server]
@@ -150,6 +123,7 @@ var cfg string = `
 	dir = templates
 
 [dispatcher]
+	middleware # clear any previous values
 	middleware = Static
 	middleware = Gzip
 	middleware = Url # The uri mw has to be before the i18n
