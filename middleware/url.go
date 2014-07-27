@@ -83,7 +83,7 @@ func URL(c context.Context, r *http.Request, dispatcherPattern string, parts []s
 		return "", err
 	}
 
-	if lang, ok := c.Get(r, context.BaseCtxKey("lang")); ok {
+	if lang, ok := c.Get(r, context.BaseCtxKey("lang")); ok && len(lang.(string)) > 0 {
 		base = "/" + lang.(string) + base
 	}
 	if len(dispatcherPattern) > 1 {

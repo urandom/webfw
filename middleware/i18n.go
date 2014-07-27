@@ -75,6 +75,9 @@ func (imw I18N) Handler(ph http.Handler, c context.Context, l *log.Logger) http.
 
 	err := imw.Renderer.Funcs(template.FuncMap{
 		"__": func(message, lang string, data ...interface{}) (template.HTML, error) {
+			if len(imw.Languages) == 0 {
+				return template.HTML(message), nil
+			}
 			return t(message, lang, data...)
 		},
 	})
