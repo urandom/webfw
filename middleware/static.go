@@ -46,7 +46,7 @@ type Static struct {
 	FileList bool
 }
 
-var tmpl *template.Template
+var staticTmpl *template.Template
 
 type FileStats []os.FileInfo
 
@@ -60,7 +60,7 @@ func (fs FileStats) Swap(i, j int)      { fs[i], fs[j] = fs[j], fs[i] }
 func (fs FileStats) Less(i, j int) bool { return fs[i].Name() < fs[j].Name() }
 
 func init() {
-	tmpl = template.Must(template.New("filelist").Funcs(template.FuncMap{
+	staticTmpl = template.Must(template.New("filelist").Funcs(template.FuncMap{
 		"formatdate": func(t time.Time) string {
 			return t.Format(dateFormat)
 		},
@@ -157,7 +157,7 @@ func (smw Static) Handler(ph http.Handler, c context.Context, l *log.Logger) htt
 						buf := util.BufferPool.GetBuffer()
 						defer util.BufferPool.Put(buf)
 
-						if err := tmpl.Execute(buf, fileList); err != nil {
+						if err := staticTmpl.Execute(buf, fileList); err != nil {
 							break
 						}
 

@@ -10,7 +10,7 @@ import (
 // http.ListenAndServe and http.Handle interface. The host and port can
 // be set through the configuration
 type Server struct {
-	dispatchers map[string]Dispatcher
+	dispatchers map[string]*Dispatcher
 	conf        Config
 	host        string
 	port        int
@@ -26,7 +26,7 @@ func NewServer(confpath ...string) Server {
 	}
 
 	return Server{
-		dispatchers: make(map[string]Dispatcher),
+		dispatchers: make(map[string]*Dispatcher),
 		conf:        conf,
 		host:        conf.Server.Host,
 		port:        conf.Server.Port,
@@ -45,15 +45,15 @@ func (s *Server) SetPort(port int) {
 
 // Dispatcher returns a dispatcher registered for a given base pattern.
 // If no dispatcher exists for the given pattern, a new one is created.
-func (s *Server) Dispatcher(pattern string) Dispatcher {
+func (s *Server) Dispatcher(pattern string) *Dispatcher {
 	if d, ok := s.dispatchers[pattern]; ok {
 		return d
 	}
 
 	d := NewDispatcher(pattern, s.conf)
-	s.dispatchers[pattern] = d
+	s.dispatchers[pattern] = &d
 
-	return d
+	return &d
 }
 
 // ListenAndServe initializes the registered dispatchers and calls the

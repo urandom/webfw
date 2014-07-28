@@ -257,6 +257,8 @@ func (n *node) lookup(term string, params RouteParams) (*node, RouteParams, bool
 			head, tail = tail, ""
 		}
 
+		params[head] = ""
+
 		if child, ok := n.children[head]; ok {
 			return child.lookup(tail, params)
 		} else {

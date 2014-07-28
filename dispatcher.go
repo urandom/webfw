@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"reflect"
 	"sort"
@@ -31,6 +32,7 @@ type Dispatcher struct {
 	handler         http.Handler
 	middleware      map[string]Middleware
 	middlewareOrder []string
+	controllers     []Controller
 }
 
 // NewDispatcher creates a dispatcher for the given base pattern and config.
@@ -71,11 +73,12 @@ func (d Dispatcher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 // Handle registers the provided controller.
-func (d Dispatcher) Handle(c Controller) {
+func (d *Dispatcher) Handle(c Controller) {
 	r := Route{
 		c.Pattern(), c.Method(), c.Handler(d.Context), c.Name(),
 	}
 
+	d.controllers = append(d.controllers, c)
 	if err := d.trie.AddRoute(r); err != nil {
 		panic(err)
 	}
@@ -180,6 +183,24 @@ func (d *Dispatcher) Initialize() {
 				mw = append(mw, middleware.Url{
 					Renderer: d.Renderer,
 					Pattern:  d.Pattern,
+				})
+				order = append(order, m)
+			case "Sitemap":
+				if u, err := url.Parse(d.Config.Sitemap.LocPrefix); err != nil || !u.IsAbs() {
+					break
+				}
+
+				var controllers []middleware.SitemapController
+				for _, c := range d.controllers {
+					if sc, ok := c.(middleware.SitemapController); ok {
+						controllers = append(controllers, sc)
+					}
+				}
+				mw = append(mw, middleware.Sitemap{
+					Pattern:          d.Pattern,
+					Prefix:           fmt.Sprintf("%s%s", d.Config.Sitemap.LocPrefix, d.Pattern),
+					RelativeLocation: d.Config.Sitemap.RelativeLocation,
+					Controllers:      controllers,
 				})
 				order = append(order, m)
 			}

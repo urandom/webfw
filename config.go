@@ -41,6 +41,10 @@ type Config struct {
 		Languages       []string `gcfg:"language"`
 		IgnoreURLPrefix []string `gcfg:"ignore-url-prefix"`
 	}
+	Sitemap struct {
+		LocPrefix        string `gcfg:"location-prefix"`
+		RelativeLocation string `gcfg:"relative-location"`
+	}
 }
 
 // ReadConfig reads the given file path, merging it with the default
@@ -124,6 +128,7 @@ var cfg string = `
 
 [dispatcher]
 	middleware # clear any previous values
+	middleware = Sitemap
 	middleware = Static
 	middleware = Gzip
 	middleware = Url # The uri mw has to be before the i18n
@@ -146,4 +151,6 @@ var cfg string = `
 
 [i18n]
 	dir = locale
+[sitemap]
+	relative-location = "sitemap.xml"
 `
