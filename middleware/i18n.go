@@ -106,6 +106,11 @@ func (imw I18N) Handler(ph http.Handler, c context.Context, l *log.Logger) http.
 				found = true
 				break
 			}
+
+			if r.URL.Path == imw.Pattern+prefix {
+				found = true
+				break
+			}
 		}
 
 		if !found {
