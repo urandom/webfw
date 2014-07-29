@@ -39,14 +39,18 @@ func TestSession(t *testing.T) {
 	s2 := NewSession(secret, nil, os.TempDir())
 
 	err := s2.Read(r, context)
-	if err != nil {
+	if err == nil {
+		t.Fatal("Expected the session to not exist")
+	} else if err != ErrNotExist {
 		t.Fatal(err)
 	}
 
 	temp := NewSession(secret, nil, os.TempDir())
 
 	err = temp.Read(r, context)
-	if err != nil {
+	if err == nil {
+		t.Fatal("Expected the session to not exist")
+	} else if err != ErrNotExist {
 		t.Fatal(err)
 	}
 
