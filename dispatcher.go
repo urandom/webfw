@@ -1,18 +1,14 @@
 package webfw
 
 import (
-	"encoding/base64"
 	"fmt"
 	"log"
 	"net/http"
-	"net/url"
 	"os"
 	"reflect"
 	"sort"
 	"strings"
-
 	"github.com/urandom/webfw/context"
-	"github.com/urandom/webfw/middleware"
 	"github.com/urandom/webfw/renderer"
 )
 
@@ -22,17 +18,17 @@ import (
 // configuration. Multiple dispatchers may be created, and each one is
 // defined by a ServerMux root pattern. The pattern must end in a '/'.
 type Dispatcher struct {
-	Pattern  string
-	Context  context.Context
-	Config   Config
-	Logger   *log.Logger
-	Renderer renderer.Renderer
+	Pattern     string
+	Context     context.Context
+	Config      Config
+	Logger      *log.Logger
+	Renderer    renderer.Renderer
+	Controllers []Controller
 
 	trie            *Trie
 	handler         http.Handler
 	middleware      map[string]Middleware
 	middlewareOrder []string
-	controllers     []Controller
 }
 
 // NewDispatcher creates a dispatcher for the given base pattern and config.
@@ -63,8 +59,10 @@ func NewDispatcher(pattern string, c Config) Dispatcher {
 func (d *Dispatcher) RegisterMiddleware(mw Middleware) {
 	name := reflect.TypeOf(mw).Name()
 
-	d.middleware[name] = mw
-	d.middlewareOrder = append(d.middlewareOrder, name)
+	if _, ok := d.middleware[name]; !ok {
+		d.middleware[name] = mw
+		d.middlewareOrder = append(d.middlewareOrder, name)
+	}
 }
 
 // ServeHTTP fulfills the net/http's Handler interface.
@@ -78,7 +76,7 @@ func (d *Dispatcher) Handle(c Controller) {
 		c.Pattern(), c.Method(), c.Handler(d.Context), c.Name(),
 	}
 
-	d.controllers = append(d.controllers, c)
+	d.Controllers = append(d.Controllers, c)
 	if err := d.trie.AddRoute(r); err != nil {
 		panic(err)
 	}
@@ -103,6 +101,19 @@ func (d Dispatcher) NameToPath(name string, method Method, params ...RouteParams
 	}
 
 	return ""
+}
+
+// SitemapControllers returns a slice of all SitemapController instances
+// currently handled by this dispatcher
+func (d Dispatcher) SitemapControllers() []SitemapController {
+	var controllers []SitemapController
+	for _, c := range d.Controllers {
+		if sc, ok := c.(SitemapController); ok {
+			controllers = append(controllers, sc)
+		}
+	}
+
+	return controllers
 }
 
 // Initialize creates all configured middleware handlers, producing a chain
@@ -130,80 +141,6 @@ func (d *Dispatcher) Initialize() {
 			order = append(order, m)
 
 			middlewareInserted[m] = true
-		} else {
-			switch m {
-			case "Error":
-				mw = append(mw, middleware.Error{ShowStack: d.Config.Server.Devel})
-				order = append(order, m)
-			case "Context":
-				mw = append(mw, middleware.Context{})
-				order = append(order, m)
-			case "Logger":
-				mw = append(mw, middleware.Logger{AccessLogger: log.New(os.Stdout, "", 0)})
-				order = append(order, m)
-			case "Gzip":
-				mw = append(mw, middleware.Gzip{})
-				order = append(order, m)
-			case "Static":
-				mw = append(mw, middleware.Static{
-					FileList: d.Config.Static.FileList || d.Config.Server.Devel,
-					Path:     d.Config.Static.Dir,
-					Expires:  d.Config.Static.Expires,
-					Prefix:   d.Config.Static.Prefix,
-					Index:    d.Config.Static.Index,
-				})
-				order = append(order, m)
-			case "Session":
-				var cipher []byte
-				if d.Config.Session.Cipher != "" {
-					var err error
-					if cipher, err = base64.StdEncoding.DecodeString(d.Config.Session.Cipher); err != nil {
-						panic(err)
-					}
-				}
-				mw = append(mw, middleware.Session{
-					Path:            d.Config.Session.Dir,
-					Secret:          []byte(d.Config.Session.Secret),
-					Cipher:          cipher,
-					MaxAge:          d.Config.Session.MaxAge,
-					CleanupInterval: d.Config.Session.CleanupInterval,
-					CleanupMaxAge:   d.Config.Session.CleanupMaxAge,
-				})
-				order = append(order, m)
-			case "I18N":
-				mw = append(mw, middleware.I18N{
-					Dir:             d.Config.I18n.Dir,
-					Pattern:         d.Pattern,
-					Languages:       d.Config.I18n.Languages,
-					Renderer:        d.Renderer,
-					IgnoreURLPrefix: d.Config.I18n.IgnoreURLPrefix,
-				})
-				order = append(order, m)
-			case "Url":
-				mw = append(mw, middleware.Url{
-					Renderer: d.Renderer,
-					Pattern:  d.Pattern,
-				})
-				order = append(order, m)
-			case "Sitemap":
-				if u, err := url.Parse(d.Config.Sitemap.LocPrefix); err != nil || !u.IsAbs() {
-					break
-				}
-
-				var controllers []middleware.SitemapController
-				for _, c := range d.controllers {
-					if sc, ok := c.(middleware.SitemapController); ok {
-						controllers = append(controllers, sc)
-					}
-				}
-				mw = append(mw, middleware.Sitemap{
-					Pattern:          d.Pattern,
-					Prefix:           fmt.Sprintf("%s%s", d.Config.Sitemap.LocPrefix, d.Pattern),
-					RelativeLocation: d.Config.Sitemap.RelativeLocation,
-					Controllers:      controllers,
-				})
-				order = append(order, m)
-			}
 		}
 	}
 

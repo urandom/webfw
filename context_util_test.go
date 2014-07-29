@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/urandom/webfw/context"
-	"github.com/urandom/webfw/middleware"
 )
 
 func TestContextUtil(t *testing.T) {
@@ -71,8 +70,8 @@ func TestContextUtil(t *testing.T) {
 
 	lang := GetLanguage(c, r)
 
-	if lang != middleware.FallbackLocale(c, r) {
-		t.Fatalf("Expected lang to be '%s', got '%s'\n", middleware.FallbackLocale(c, r), lang)
+	if lang != GetFallbackLanguage(c, r) {
+		t.Fatalf("Expected lang to be '%s', got '%s'\n", GetFallbackLanguage(c, r), lang)
 	}
 
 	c.Set(r, context.BaseCtxKey("lang"), "ZZ")

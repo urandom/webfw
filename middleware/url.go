@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/urandom/webfw"
 	"github.com/urandom/webfw/context"
-	"github.com/urandom/webfw/renderer"
 )
 
 /*
@@ -38,19 +38,19 @@ renderer template. The following functions are currently provided:
     - {{ localizedUrl "/foo" "de" .base.r }} -> /de/foo
 */
 type Url struct {
-	Renderer renderer.Renderer
-	Pattern  string
+	Pattern string
 }
 
-func (umw Url) Handler(ph http.Handler, c context.Context, l *log.Logger) http.Handler {
-	err := umw.Renderer.Funcs(template.FuncMap{
+func (mw Url) Handler(ph http.Handler, c context.Context, l *log.Logger) http.Handler {
+	renderer := webfw.GetRenderer(c)
+	err := renderer.Funcs(template.FuncMap{
 		"url": func(data ...interface{}) (string, error) {
 			r, parts, err := handleParts(data)
 			if err != nil {
 				return "", err
 			}
 
-			return URL(c, r, umw.Pattern, parts)
+			return URL(c, r, mw.Pattern, parts)
 		},
 		"localizedUrl": func(data ...interface{}) (string, error) {
 			var lang string
@@ -61,7 +61,7 @@ func (umw Url) Handler(ph http.Handler, c context.Context, l *log.Logger) http.H
 
 			lang, parts = parts[len(parts)-1], parts[:len(parts)-1]
 
-			return LocalizedURL(c, r, umw.Pattern, lang, parts)
+			return LocalizedURL(c, r, mw.Pattern, lang, parts)
 		},
 	})
 

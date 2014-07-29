@@ -5,18 +5,15 @@ import (
 	"html/template"
 	"log"
 	"net/http"
-	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 	ttemplate "text/template"
 
+	"github.com/urandom/webfw"
 	"github.com/urandom/webfw/context"
-	"github.com/urandom/webfw/renderer"
 	"github.com/urandom/webfw/util"
 
 	"github.com/nicksnyder/go-i18n/i18n"
-	lng "github.com/nicksnyder/go-i18n/i18n/language"
 )
 
 /*
@@ -63,7 +60,6 @@ obtained using the ".base.lang" pipeline.
 type I18N struct {
 	Languages       []string
 	Pattern         string
-	Renderer        renderer.Renderer
 	Dir             string
 	IgnoreURLPrefix []string
 }
@@ -73,7 +69,8 @@ func (imw I18N) Handler(ph http.Handler, c context.Context, l *log.Logger) http.
 		i18n.MustLoadTranslationFile(filepath.Join(imw.Dir, l+".all.json"))
 	}
 
-	err := imw.Renderer.Funcs(template.FuncMap{
+	renderer := webfw.GetRenderer(c)
+	err := renderer.Funcs(template.FuncMap{
 		"__": func(message, lang string, data ...interface{}) (template.HTML, error) {
 			if len(imw.Languages) == 0 {
 				return template.HTML(message), nil
@@ -133,11 +130,8 @@ func (imw I18N) Handler(ph http.Handler, c context.Context, l *log.Logger) http.
 					c.Set(r, context.BaseCtxKey("lang"), language)
 					found = true
 
-					if val, ok := c.Get(r, context.BaseCtxKey("session")); ok {
-						val.(context.Session).Set("language", language)
-					} else {
-						l.Println("Session not found, unable to store current language")
-					}
+					s := webfw.GetSession(c, r)
+					s.Set("language", language)
 
 					break
 				}
@@ -145,7 +139,7 @@ func (imw I18N) Handler(ph http.Handler, c context.Context, l *log.Logger) http.
 		}
 
 		if !found {
-			fallback := FallbackLocale(c, r)
+			fallback := webfw.GetFallbackLanguage(c, r)
 			index := strings.Index(fallback, "-")
 			short := fallback
 			if index > -1 {
@@ -194,42 +188,6 @@ func (imw I18N) Handler(ph http.Handler, c context.Context, l *log.Logger) http.
 	}
 
 	return http.HandlerFunc(handler)
-}
-
-var localeRegexp = regexp.MustCompile(`\.[\w\-]+$`)
-
-func FallbackLocale(c context.Context, r *http.Request) string {
-	if val, ok := c.Get(r, context.BaseCtxKey("session")); ok {
-		sess := val.(context.Session)
-
-		if language, ok := sess.Get("language"); ok {
-			return language.(string)
-		}
-	}
-
-	langs := lng.Parse(r.Header.Get("Accept-Language"))
-
-	if len(langs) > 0 {
-		return langs[0].String()
-	}
-
-	language := os.Getenv("LANG")
-
-	if language == "" {
-		language = os.Getenv("LC_MESSAGES")
-		language = localeRegexp.ReplaceAllLiteralString(language, "")
-	}
-
-	if language == "" {
-		language = "en"
-	} else {
-		langs := lng.Parse(language)
-		if len(langs) > 0 {
-			return langs[0].String()
-		}
-	}
-
-	return language
 }
 
 func t(message, lang string, data ...interface{}) (template.HTML, error) {

@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"strings"
 	"text/template"
-	"time"
 
+	"github.com/urandom/webfw"
 	"github.com/urandom/webfw/context"
 	"github.com/urandom/webfw/util"
 )
@@ -16,43 +16,10 @@ type Sitemap struct {
 	Pattern          string
 	Prefix           string
 	RelativeLocation string
-	Controllers      []SitemapController
+	Controllers      []webfw.SitemapController
 }
 
-type SitemapItem struct {
-	Loc        string
-	LastMod    time.Time
-	ChangeFreq SitemapFrequency
-	Priority   float64
-}
-
-// The sitemap controller provides an additional Sitemap method that returns
-// a slice of SitemapItems which consist of the url of the controller, relative
-// to the dispatcher, the last modification time, the change frequency, and the
-// priority.
-type SitemapController interface {
-	Sitemap(context.Context) []SitemapItem
-}
-
-type SitemapFrequency string
-
-const (
-	SitemapFrequencyAlways  SitemapFrequency = "always"
-	SitemapFrequencyHourly  SitemapFrequency = "hourly"
-	SitemapFrequencyDaily   SitemapFrequency = "daily"
-	SitemapFrequencyWeekly  SitemapFrequency = "weekly"
-	SitemapFrequencyMonthly SitemapFrequency = "monthly"
-	SitemapFrequencyYearly  SitemapFrequency = "yearly"
-	SitemapFrequencyNever   SitemapFrequency = "never"
-
-	SitemapNoFrequency SitemapFrequency = ""
-	SitemapNoPriority  float64          = -1
-)
-
-var (
-	SitemapNoLastMod = time.Unix(0, 0)
-	sitemapTmpl      *template.Template
-)
+var sitemapTmpl *template.Template
 
 func init() {
 	sitemapTmpl = template.Must(template.New("sitemap").Parse(xmlTemplate))
@@ -84,15 +51,15 @@ func (mw Sitemap) Handler(ph http.Handler, c context.Context, l *log.Logger) htt
 				for _, s := range sm {
 					m := map[string]string{"loc": prefix + s.Loc}
 
-					if s.LastMod != SitemapNoLastMod {
+					if s.LastMod != webfw.SitemapNoLastMod {
 						m["lastmod"] = s.LastMod.Format("2006-01-02")
 					}
 
-					if s.ChangeFreq != SitemapNoFrequency {
+					if s.ChangeFreq != webfw.SitemapNoFrequency {
 						m["changefreq"] = string(s.ChangeFreq)
 					}
 
-					if s.Priority != SitemapNoPriority {
+					if s.Priority != webfw.SitemapNoPriority {
 						m["priority"] = strconv.FormatFloat(s.Priority, 'g', 2, 64)
 					}
 

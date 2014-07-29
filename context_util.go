@@ -7,11 +7,13 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"regexp"
 
 	"github.com/urandom/webfw/context"
-	"github.com/urandom/webfw/middleware"
 	"github.com/urandom/webfw/renderer"
 	"github.com/urandom/webfw/util"
+
+	lng "github.com/nicksnyder/go-i18n/i18n/language"
 )
 
 // GetDispatcher returns the request dispatcher.
@@ -93,7 +95,46 @@ func GetLanguage(c context.Context, r *http.Request) string {
 		return val.(string)
 	}
 
-	return middleware.FallbackLocale(c, r)
+	return GetFallbackLanguage(c, r)
+}
+
+var localeRegexp = regexp.MustCompile(`\.[\w\-]+$`)
+
+// GetFallbackLanguage tries to obtain a requested language via the session,
+// or the Accept-Language request header, or the LANG or LC_MESSAGES
+// environment variables
+func GetFallbackLanguage(c context.Context, r *http.Request) string {
+	if val, ok := c.Get(r, context.BaseCtxKey("session")); ok {
+		sess := val.(context.Session)
+
+		if language, ok := sess.Get("language"); ok {
+			return language.(string)
+		}
+	}
+
+	langs := lng.Parse(r.Header.Get("Accept-Language"))
+
+	if len(langs) > 0 {
+		return langs[0].String()
+	}
+
+	language := os.Getenv("LANG")
+
+	if language == "" {
+		language = os.Getenv("LC_MESSAGES")
+		language = localeRegexp.ReplaceAllLiteralString(language, "")
+	}
+
+	if language == "" {
+		language = "en"
+	} else {
+		langs := lng.Parse(language)
+		if len(langs) > 0 {
+			return langs[0].String()
+		}
+	}
+
+	return language
 }
 
 // GetRenderCtx returns a RenderCtx wrapper around the current raw renderer
