@@ -16,11 +16,11 @@ func TestI18NHandler(t *testing.T) {
 	c := context.NewContext()
 	l := log.New(os.Stderr, "", 0)
 	ren := renderer.NewRenderer("testdata", "test.tmpl")
+	c.SetGlobal(context.BaseCtxKey("renderer"), ren)
 
 	mw := I18N{
 		Languages:       []string{"en", "bg"},
 		Pattern:         "/",
-		Renderer:        ren,
 		Dir:             "testdata",
 		IgnoreURLPrefix: []string{"/css", "/js"},
 	}

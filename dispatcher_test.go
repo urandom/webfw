@@ -56,7 +56,7 @@ func TestDispatcherMiddlewareRegistration(t *testing.T) {
 
 	d.Initialize()
 
-	order := []string{"MyCustomMW", "MyCustomMW2", "Static", "Error"}
+	order := []string{"MyCustomMW", "MyCustomMW2"}
 	for i, m := range order {
 		if m != d.middlewareOrder[i] {
 			t.Fatalf("Expected middleware '%s' at position %d, got '%s'\n", m, i, d.middlewareOrder[i])
@@ -84,7 +84,7 @@ func TestDispatcherMiddlewareRegistration(t *testing.T) {
 
 	d.Initialize()
 
-	order = []string{"MyCustomMW2", "Static", "MyCustomMW", "Error"}
+	order = []string{"MyCustomMW2", "MyCustomMW"}
 	for i, m := range order {
 		if m != d.middlewareOrder[i] {
 			t.Fatalf("Expected middleware '%s' at position %d, got '%s'\n", m, i, d.middlewareOrder[i])
