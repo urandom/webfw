@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -17,6 +18,11 @@ import (
 var secret = []byte("test")
 
 func TestSession(t *testing.T) {
+	os.Remove(path.Join(os.TempDir(), "test1"))
+	os.Remove(path.Join(os.TempDir(), "test2"))
+	os.Remove(path.Join(os.TempDir(), "test3"))
+	os.Remove(path.Join(os.TempDir(), "test4"))
+
 	s := NewSession(secret, nil, os.TempDir())
 	s.SetName("test1")
 
@@ -40,7 +46,7 @@ func TestSession(t *testing.T) {
 
 	err := s2.Read(r, context)
 	if err == nil {
-		t.Fatal("Expected the session to not exist")
+		t.Fatalf("Expected the session to not exist, got %+v\n", s2)
 	} else if err != ErrNotExist {
 		t.Fatal(err)
 	}
@@ -49,7 +55,7 @@ func TestSession(t *testing.T) {
 
 	err = temp.Read(r, context)
 	if err == nil {
-		t.Fatal("Expected the session to not exist")
+		t.Fatal("Expected the session to not exist, got %+v\n", temp)
 	} else if err != ErrNotExist {
 		t.Fatal(err)
 	}
