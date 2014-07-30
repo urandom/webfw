@@ -95,7 +95,7 @@ const xmlTemplate = `<?xml version="1.0" encoding="UTF-8"?>
 			<lastmod>{{ .lastmod }}</lastmod>
 			{{ end }}
 			{{ if .changefreq }}
-			<changefreq>{{ .changefreq }} </changefreq>
+			<changefreq>{{ .changefreq }}</changefreq>
 			{{ end }}
 			{{ if .priority }}
 			<priority>{{ .priority }}</priority>
