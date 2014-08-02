@@ -92,11 +92,15 @@ func (smw Static) Handler(ph http.Handler, c context.Context, l *log.Logger) htt
 			return
 		}
 
+		uriParts := strings.SplitN(r.RequestURI, "?", 2)
+		if uriParts[0] == "" {
+			uriParts[0] = r.URL.Path
+		}
 		for {
 			if r.Method != "GET" && r.Method != "HEAD" {
 				break
 			}
-			rpath := r.URL.Path
+			rpath := uriParts[0]
 
 			if smw.Prefix != "" {
 				if !strings.HasPrefix(rpath, smw.Prefix) {
@@ -121,8 +125,8 @@ func (smw Static) Handler(ph http.Handler, c context.Context, l *log.Logger) htt
 			}
 
 			if stat.IsDir() {
-				if !strings.HasSuffix(r.URL.Path, "/") {
-					http.Redirect(w, r, r.URL.Path+"/", http.StatusFound)
+				if !strings.HasSuffix(uriParts[0], "/") {
+					http.Redirect(w, r, uriParts[0]+"/", http.StatusFound)
 					return
 				}
 

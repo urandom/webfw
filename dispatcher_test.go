@@ -135,6 +135,7 @@ func TestDispatcherHandle(t *testing.T) {
 	d.Handle(c2)
 
 	r, _ := http.NewRequest("GET", "http://localhost:8080", nil)
+	r.RequestURI = ""
 	w := httptest.NewRecorder()
 
 	d.ServeHTTP(w, r)
@@ -143,6 +144,7 @@ func TestDispatcherHandle(t *testing.T) {
 	}
 
 	r, _ = http.NewRequest("GET", "http://localhost:8080/", nil)
+	r.RequestURI = "/"
 	w = httptest.NewRecorder()
 
 	d.ServeHTTP(w, r)
@@ -151,6 +153,7 @@ func TestDispatcherHandle(t *testing.T) {
 	}
 
 	r, _ = http.NewRequest("GET", "http://localhost:8080/hello/World", nil)
+	r.RequestURI = "/hello/World"
 	w = httptest.NewRecorder()
 
 	d.ServeHTTP(w, r)
@@ -159,6 +162,7 @@ func TestDispatcherHandle(t *testing.T) {
 	}
 
 	r, _ = http.NewRequest("GET", "http://localhost:8080/test", nil)
+	r.RequestURI = "/test"
 	w = httptest.NewRecorder()
 
 	d.ServeHTTP(w, r)
@@ -294,6 +298,7 @@ type MyCustomMW2 struct {
 func (mmw MyCustomMW2) Handler(ph http.Handler, c context.Context, l *log.Logger) http.Handler {
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		r.URL.Path = mmw.to
+		r.RequestURI = mmw.to
 		c.Set(r, "foo", mmw.to)
 		ph.ServeHTTP(w, r)
 	}

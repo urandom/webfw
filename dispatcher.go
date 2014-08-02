@@ -8,6 +8,7 @@ import (
 	"reflect"
 	"sort"
 	"strings"
+
 	"github.com/urandom/webfw/context"
 	"github.com/urandom/webfw/renderer"
 )
@@ -181,7 +182,10 @@ func (d Dispatcher) handlerFunc() http.Handler {
 			path := GetForward(d.Context, r)
 
 			if path == "" {
-				path = r.URL.RequestURI()
+				path = r.RequestURI
+				if path == "" {
+					path = r.URL.RequestURI()
+				}
 			} else {
 				d.Context.Delete(r, context.BaseCtxKey("forward"))
 			}

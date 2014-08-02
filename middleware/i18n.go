@@ -94,17 +94,21 @@ func (imw I18N) Handler(ph http.Handler, c context.Context, l *log.Logger) http.
 
 		found := false
 
+		uriParts := strings.SplitN(r.RequestURI, "?", 2)
+		if uriParts[0] == "" {
+			uriParts[0] = r.URL.Path
+		}
 		for _, prefix := range imw.IgnoreURLPrefix {
 			if prefix[0] == '/' {
 				prefix = prefix[1:]
 			}
 
-			if strings.HasPrefix(r.URL.Path, imw.Pattern+prefix+"/") {
+			if strings.HasPrefix(uriParts[0], imw.Pattern+prefix+"/") {
 				found = true
 				break
 			}
 
-			if r.URL.Path == imw.Pattern+prefix {
+			if uriParts[0] == imw.Pattern+prefix {
 				found = true
 				break
 			}
@@ -112,20 +116,23 @@ func (imw I18N) Handler(ph http.Handler, c context.Context, l *log.Logger) http.
 
 		if !found {
 			for _, language := range imw.Languages {
-				if r.URL.Path == imw.Pattern+language {
-					url := r.URL.Path + "/"
-					if r.URL.RawQuery != "" {
-						url += "?" + r.URL.RawQuery
+				if uriParts[0] == imw.Pattern+language {
+					url := uriParts[0] + "/"
+					if len(uriParts) > 1 && uriParts[1] != "" {
+						url += "?" + uriParts[1]
 					}
-					url += r.URL.Fragment
 
 					http.Redirect(w, r, url, http.StatusFound)
 
 					return
 				}
 
-				if strings.HasPrefix(r.URL.Path, imw.Pattern+language+"/") {
+				if strings.HasPrefix(uriParts[0], imw.Pattern+language+"/") {
 					r.URL.Path = imw.Pattern + r.URL.Path[len(imw.Pattern+language+"/"):]
+
+					uriParts[0] = imw.Pattern + uriParts[0][len(imw.Pattern+language+"/"):]
+
+					r.RequestURI = strings.Join(uriParts, "?")
 
 					c.Set(r, context.BaseCtxKey("lang"), language)
 					found = true
@@ -171,12 +178,9 @@ func (imw I18N) Handler(ph http.Handler, c context.Context, l *log.Logger) http.
 				language = short
 			}
 
-			url := imw.Pattern + language + r.URL.Path[len(imw.Pattern)-1:]
-			if r.URL.RawQuery != "" {
-				url += "?" + r.URL.RawQuery
-			}
-			if r.URL.Fragment != "" {
-				url += "#" + r.URL.Fragment
+			url := imw.Pattern + language + uriParts[0][len(imw.Pattern)-1:]
+			if len(uriParts) > 1 && uriParts[1] != "" {
+				url += "?" + uriParts[1]
 			}
 
 			http.Redirect(w, r, url, http.StatusFound)

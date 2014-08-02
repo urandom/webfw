@@ -27,6 +27,7 @@ func TestSitemapHandler(t *testing.T) {
 	}), c, l)
 
 	r, _ := http.NewRequest("GET", "http://example.com/en.all.json", nil)
+	r.RequestURI = "/en.all.json"
 	rec := httptest.NewRecorder()
 
 	h.ServeHTTP(rec, r)
@@ -37,6 +38,7 @@ func TestSitemapHandler(t *testing.T) {
 	}
 
 	r, _ = http.NewRequest("GET", "http://example.com/sitemap.xml", nil)
+	r.RequestURI = "/sitemap.xml"
 	rec = httptest.NewRecorder()
 
 	h.ServeHTTP(rec, r)
@@ -70,6 +72,7 @@ func TestSitemapHandler(t *testing.T) {
 	}), c, l)
 
 	r, _ = http.NewRequest("GET", "http://example.com/sitemap2.xml", nil)
+	r.RequestURI = "/sitemap2.xml"
 	rec = httptest.NewRecorder()
 
 	h.ServeHTTP(rec, r)

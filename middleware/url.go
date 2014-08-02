@@ -139,11 +139,15 @@ func unlocalizedUrl(r *http.Request, parts []string) (string, error) {
 		return "", errors.New("No base url given")
 	}
 
+	uriParts := strings.SplitN(r.RequestURI, "?", 2)
+	if uriParts[0] == "" {
+		uriParts[0] = r.URL.Path
+	}
 	for i, part := range parts {
-		if r.URL.Path[0] == '/' {
-			part = strings.Replace(part, "/:here:", r.URL.RequestURI(), -1)
+		if r.RequestURI[0] == '/' {
+			part = strings.Replace(part, "/:here:", r.RequestURI, -1)
 		}
-		part = strings.Replace(part, ":here:", r.URL.RequestURI(), -1)
+		part = strings.Replace(part, ":here:", r.RequestURI, -1)
 
 		parts[i] = part
 	}
@@ -151,20 +155,20 @@ func unlocalizedUrl(r *http.Request, parts []string) (string, error) {
 	base := parts[0]
 	query := strings.Join(parts[1:], "&")
 
-	if r.URL.RawQuery != "" && (base == "" || base[0] != '/') {
-		query = r.URL.RawQuery + "&" + query
+	if len(uriParts) > 1 && uriParts[1] != "" && (base == "" || base[0] != '/') {
+		query = uriParts[1] + "&" + query
 		if query[len(query)-1] == '&' {
 			query = query[:len(query)-1]
 		}
 	}
 
 	if base == "" {
-		base = r.URL.Path
+		base = uriParts[0]
 	} else if base[0] != '/' {
-		if r.URL.Path[len(r.URL.Path)-1] == '/' {
-			base = r.URL.Path + base
+		if uriParts[0][len(uriParts[0])-1] == '/' {
+			base = uriParts[0] + base
 		} else {
-			base = r.URL.Path + "/" + base
+			base = uriParts[0] + "/" + base
 		}
 	}
 

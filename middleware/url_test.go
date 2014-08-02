@@ -27,6 +27,8 @@ func TestUrlHandler(t *testing.T) {
 	}), c, l)
 
 	r, _ := http.NewRequest("GET", "http://localhost:8080/some/url", nil)
+	r.RequestURI = "/some/url"
+
 	rec := httptest.NewRecorder()
 	c.Set(r, context.BaseCtxKey("r"), r)
 	c.Set(r, context.BaseCtxKey("lang"), "en")

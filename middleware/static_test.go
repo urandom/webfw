@@ -31,6 +31,7 @@ func TestStaticHandler(t *testing.T) {
 	}), c, l)
 
 	r, _ := http.NewRequest("GET", "http://localhost:8080/en.all.json", nil)
+	r.RequestURI = "/en.all.json"
 	rec := httptest.NewRecorder()
 
 	h.ServeHTTP(rec, r)
@@ -45,6 +46,7 @@ func TestStaticHandler(t *testing.T) {
 	}), c, l)
 
 	r, _ = http.NewRequest("GET", "http://localhost:8080/en.all.json", nil)
+	r.RequestURI = "/en.all.json"
 	rec = httptest.NewRecorder()
 
 	h.ServeHTTP(rec, r)
@@ -81,6 +83,7 @@ func TestStaticHandler(t *testing.T) {
 	}
 
 	r, _ = http.NewRequest("GET", "http://localhost:8080/dummy", nil)
+	r.RequestURI = "/dummy"
 	rec = httptest.NewRecorder()
 
 	h.ServeHTTP(rec, r)
@@ -90,6 +93,7 @@ func TestStaticHandler(t *testing.T) {
 	}
 
 	r, _ = http.NewRequest("GET", "http://localhost:8080/dummy/", nil)
+	r.RequestURI = "/dummy/"
 	rec = httptest.NewRecorder()
 
 	h.ServeHTTP(rec, r)
@@ -107,6 +111,7 @@ func TestStaticHandler(t *testing.T) {
 	}), c, l)
 
 	r, _ = http.NewRequest("GET", "http://localhost:8080/dummy/", nil)
+	r.RequestURI = "/dummy/"
 	rec = httptest.NewRecorder()
 
 	h.ServeHTTP(rec, r)
@@ -129,6 +134,7 @@ func TestStaticHandler(t *testing.T) {
 	}), c, l)
 
 	r, _ = http.NewRequest("GET", "http://localhost:8080/en.all.json", nil)
+	r.RequestURI = "/en.all.json"
 	rec = httptest.NewRecorder()
 
 	h.ServeHTTP(rec, r)
@@ -138,6 +144,7 @@ func TestStaticHandler(t *testing.T) {
 	}
 
 	r, _ = http.NewRequest("GET", "http://localhost:8080/test/en.all.json", nil)
+	r.RequestURI = "/test/en.all.json"
 	rec = httptest.NewRecorder()
 
 	h.ServeHTTP(rec, r)
@@ -160,6 +167,7 @@ func TestStaticHandler(t *testing.T) {
 	}), c, l)
 
 	r, _ = http.NewRequest("GET", "http://localhost:8080/en.all.json", nil)
+	r.RequestURI = "/en.all.json"
 	rec = httptest.NewRecorder()
 
 	h.ServeHTTP(rec, r)
@@ -190,6 +198,7 @@ func TestStaticHandler(t *testing.T) {
 	}), c, l)
 
 	r, _ = http.NewRequest("GET", "http://localhost:8080/dummy/", nil)
+	r.RequestURI = "/dummy/"
 	rec = httptest.NewRecorder()
 
 	h.ServeHTTP(rec, r)
@@ -204,6 +213,7 @@ func TestStaticHandler(t *testing.T) {
 	}
 
 	r, _ = http.NewRequest("GET", "http://localhost:8080/", nil)
+	r.RequestURI = "/"
 	rec = httptest.NewRecorder()
 
 	h.ServeHTTP(rec, r)

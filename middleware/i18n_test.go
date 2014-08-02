@@ -41,6 +41,7 @@ func TestI18NHandler(t *testing.T) {
 	}
 
 	r, _ = http.NewRequest("GET", "http://localhost:8080/bg/", nil)
+	r.RequestURI = "/bg/"
 	rec = httptest.NewRecorder()
 
 	h.ServeHTTP(rec, r)
@@ -55,6 +56,7 @@ func TestI18NHandler(t *testing.T) {
 	}
 
 	r, _ = http.NewRequest("GET", "http://localhost:8080/en/", nil)
+	r.RequestURI = "/en/"
 	rec = httptest.NewRecorder()
 
 	s := context.NewSession([]byte(""), nil, os.TempDir())
@@ -80,6 +82,7 @@ func TestI18NHandler(t *testing.T) {
 	}
 
 	r, _ = http.NewRequest("GET", "http://localhost:8080/en", nil)
+	r.RequestURI = "/en"
 	rec = httptest.NewRecorder()
 
 	h.ServeHTTP(rec, r)
@@ -94,6 +97,7 @@ func TestI18NHandler(t *testing.T) {
 	}
 
 	r, _ = http.NewRequest("GET", "http://localhost:8080/foo/bar/baz", nil)
+	r.RequestURI = "/foo/bar/baz"
 	rec = httptest.NewRecorder()
 
 	h.ServeHTTP(rec, r)
@@ -108,6 +112,7 @@ func TestI18NHandler(t *testing.T) {
 	}
 
 	r, _ = http.NewRequest("GET", "http://localhost:8080/foo/bar/baz?alpha=beta&gamma=delta", nil)
+	r.RequestURI = "/foo/bar/baz?alpha=beta&gamma=delta"
 	rec = httptest.NewRecorder()
 
 	h.ServeHTTP(rec, r)
@@ -122,6 +127,7 @@ func TestI18NHandler(t *testing.T) {
 	}
 
 	r, _ = http.NewRequest("GET", "http://localhost:8080/foo/bar/baz?alpha=beta&gamma=delta#test", nil)
+	r.RequestURI = "/foo/bar/baz?alpha=beta&gamma=delta#test"
 	rec = httptest.NewRecorder()
 
 	h.ServeHTTP(rec, r)
@@ -136,6 +142,7 @@ func TestI18NHandler(t *testing.T) {
 	}
 
 	r, _ = http.NewRequest("GET", "http://localhost:8080/css/foo", nil)
+	r.RequestURI = "/css/foo"
 	rec = httptest.NewRecorder()
 
 	h = mw.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -148,6 +155,7 @@ func TestI18NHandler(t *testing.T) {
 	}
 
 	r, _ = http.NewRequest("GET", "http://localhost:8080/js/foo", nil)
+	r.RequestURI = "/js/foo"
 	rec = httptest.NewRecorder()
 
 	h.ServeHTTP(rec, r)

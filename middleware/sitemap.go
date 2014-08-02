@@ -32,7 +32,11 @@ func (mw Sitemap) Handler(ph http.Handler, c context.Context, l *log.Logger) htt
 			loc = "sitemap.xml"
 		}
 
-		if r.URL.Path == mw.Pattern+loc {
+		uriParts := strings.SplitN(r.RequestURI, "?", 2)
+		if uriParts[0] == "" {
+			uriParts[0] = r.URL.Path
+		}
+		if uriParts[0] == mw.Pattern+loc {
 			prefix := mw.Prefix
 			if lang, ok := c.Get(r, context.BaseCtxKey("lang")); ok {
 				if l, ok := lang.(string); ok && l != "" {
