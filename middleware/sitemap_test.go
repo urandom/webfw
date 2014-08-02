@@ -99,7 +99,7 @@ func TestSitemapHandler(t *testing.T) {
 		t.Fatalf("Expected '%s', got '%s'\n", expected, rec.Body.Bytes())
 	}
 
-	mod := time.Now()
+	mod := time.Date(2014, time.July, 30, 0, 0, 0, 0, time.Local)
 	mw = Sitemap{
 		Pattern:          "/",
 		Prefix:           "http://example.com/",

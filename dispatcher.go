@@ -182,7 +182,7 @@ func (d Dispatcher) handlerFunc() http.Handler {
 			path := GetForward(d.Context, r)
 
 			if path == "" {
-				path = r.RequestURI
+				path = strings.SplitN(r.RequestURI, "?", 2)[0]
 				if path == "" {
 					path = r.URL.RequestURI()
 				}
