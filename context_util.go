@@ -163,3 +163,12 @@ func GetNamedForward(c context.Context, r *http.Request) string {
 	}
 	return ""
 }
+
+// GetController returns the current controller object.
+func GetController(c context.Context, r *http.Request) Controller {
+	if val, ok := c.Get(r, context.BaseCtxKey("controller")); ok {
+		return val.(Controller)
+	}
+
+	return nil
+}

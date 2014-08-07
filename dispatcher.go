@@ -74,7 +74,7 @@ func (d Dispatcher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // Handle registers the provided controller.
 func (d *Dispatcher) Handle(c Controller) {
 	r := Route{
-		c.Pattern(), c.Method(), c.Handler(d.Context), c.Name(),
+		c.Pattern(), c.Method(), c.Handler(d.Context), c.Name(), c,
 	}
 
 	d.Controllers = append(d.Controllers, c)
@@ -207,6 +207,7 @@ func (d Dispatcher) handlerFunc() http.Handler {
 			route := match.RouteMap[method]
 
 			d.Context.Set(r, context.BaseCtxKey("route-name"), route.Name)
+			d.Context.Set(r, context.BaseCtxKey("controller"), route.Controller)
 			route.Handler(w, r)
 
 			if GetForward(d.Context, r) != "" || GetNamedForward(d.Context, r) != "" {

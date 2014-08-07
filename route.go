@@ -3,10 +3,11 @@ package webfw
 import "net/http"
 
 type Route struct {
-	Pattern string
-	Method  Method
-	Handler http.HandlerFunc
-	Name    string
+	Pattern    string
+	Method     Method
+	Handler    http.HandlerFunc
+	Name       string
+	Controller Controller
 }
 
 type Method int
