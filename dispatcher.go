@@ -26,7 +26,7 @@ type Dispatcher struct {
 	Renderer    renderer.Renderer
 	Controllers []Controller
 
-	trie            *Trie
+	Trie            *Trie
 	handler         http.Handler
 	middleware      map[string]Middleware
 	middlewareOrder []string
@@ -44,7 +44,7 @@ func NewDispatcher(pattern string, c Config) Dispatcher {
 		Config:  c,
 		Logger:  log.New(os.Stderr, "", 0),
 
-		trie:       NewTrie(),
+		Trie:       NewTrie(),
 		middleware: make(map[string]Middleware),
 	}
 
@@ -78,7 +78,7 @@ func (d *Dispatcher) Handle(c Controller) {
 	}
 
 	d.Controllers = append(d.Controllers, c)
-	if err := d.trie.AddRoute(r); err != nil {
+	if err := d.Trie.AddRoute(r); err != nil {
 		panic(err)
 	}
 }
@@ -91,7 +91,7 @@ func (d *Dispatcher) Handle(c Controller) {
 // for the given name. The root dispatcher pattern is always prepended to any
 // found path.
 func (d Dispatcher) NameToPath(name string, method Method, params ...RouteParams) string {
-	if match, ok := d.trie.LookupNamed(name, method, params...); ok {
+	if match, ok := d.Trie.LookupNamed(name, method, params...); ok {
 		for _, v := range match.ReverseURL {
 			if d.Pattern != "/" {
 				return d.Pattern[:len(d.Pattern)-1] + v
@@ -129,6 +129,7 @@ func (d *Dispatcher) Initialize() {
 
 	d.Context.SetGlobal(context.BaseCtxKey("renderer"), d.Renderer)
 	d.Context.SetGlobal(context.BaseCtxKey("logger"), d.Logger)
+	d.Context.SetGlobal(context.BaseCtxKey("route-trie"), d.Trie)
 	d.Context.SetGlobal(context.BaseCtxKey("dispatcher"), d)
 	d.Context.SetGlobal(context.BaseCtxKey("config"), d.Config)
 
@@ -176,7 +177,7 @@ func (d Dispatcher) handlerFunc() http.Handler {
 		method := ReverseMethodNames[r.Method]
 		if GetNamedForward(d.Context, r) != "" {
 			namedMatch = true
-			match, matchFound = d.trie.LookupNamed(GetNamedForward(d.Context, r), method)
+			match, matchFound = d.Trie.LookupNamed(GetNamedForward(d.Context, r), method)
 			d.Context.Delete(r, context.BaseCtxKey("named-forward"))
 		} else {
 			path := GetForward(d.Context, r)
@@ -194,7 +195,7 @@ func (d Dispatcher) handlerFunc() http.Handler {
 				path = path[len(d.Pattern)-1:]
 			}
 			d.Context.Delete(r, context.BaseCtxKey("params"))
-			match, matchFound = d.trie.Lookup(path, method)
+			match, matchFound = d.Trie.Lookup(path, method)
 		}
 
 		d.Context.Set(r, context.BaseCtxKey("r"), r)
@@ -207,7 +208,6 @@ func (d Dispatcher) handlerFunc() http.Handler {
 			route := match.RouteMap[method]
 
 			d.Context.Set(r, context.BaseCtxKey("route-name"), route.Name)
-			d.Context.Set(r, context.BaseCtxKey("controller"), route.Controller)
 			route.Handler(w, r)
 
 			if GetForward(d.Context, r) != "" || GetNamedForward(d.Context, r) != "" {
