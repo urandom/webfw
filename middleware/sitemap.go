@@ -16,7 +16,9 @@ type Sitemap struct {
 	Pattern          string
 	Prefix           string
 	RelativeLocation string
-	Controllers      []webfw.SitemapController
+	Controllers      []webfw.Controller
+
+	sitemapControllers []webfw.SitemapController
 }
 
 var sitemapTmpl *template.Template
@@ -26,6 +28,12 @@ func init() {
 }
 
 func (mw Sitemap) Handler(ph http.Handler, c context.Context, l *log.Logger) http.Handler {
+	for _, c := range mw.Controllers {
+		if sc, ok := c.(webfw.SitemapController); ok {
+			mw.sitemapControllers = append(mw.sitemapControllers, sc)
+		}
+	}
+
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		loc := mw.RelativeLocation
 		if loc == "" {
@@ -50,7 +58,7 @@ func (mw Sitemap) Handler(ph http.Handler, c context.Context, l *log.Logger) htt
 
 			urls := []map[string]string{}
 
-			for _, con := range mw.Controllers {
+			for _, con := range mw.sitemapControllers {
 				sm := con.Sitemap(c)
 				for _, s := range sm {
 					m := map[string]string{"loc": prefix + s.Loc}

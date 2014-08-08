@@ -20,7 +20,7 @@ func TestSitemapHandler(t *testing.T) {
 		Pattern:          "/",
 		Prefix:           "http://example.com/",
 		RelativeLocation: "sitemap.xml",
-		Controllers:      []webfw.SitemapController{},
+		Controllers:      []webfw.Controller{},
 	}
 
 	h := mw.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -58,8 +58,8 @@ func TestSitemapHandler(t *testing.T) {
 		Pattern:          "/",
 		Prefix:           "http://example.com/",
 		RelativeLocation: "sitemap2.xml",
-		Controllers: []webfw.SitemapController{
-			sc{[]webfw.SitemapItem{webfw.SitemapItem{
+		Controllers: []webfw.Controller{
+			sc{webfw.BaseController{}, []webfw.SitemapItem{webfw.SitemapItem{
 				Loc:        "/foo",
 				LastMod:    webfw.SitemapNoLastMod,
 				ChangeFreq: webfw.SitemapFrequencyDaily,
@@ -104,8 +104,8 @@ func TestSitemapHandler(t *testing.T) {
 		Pattern:          "/",
 		Prefix:           "http://example.com/",
 		RelativeLocation: "sitemap2.xml",
-		Controllers: []webfw.SitemapController{
-			sc{[]webfw.SitemapItem{
+		Controllers: []webfw.Controller{
+			sc{webfw.BaseController{}, []webfw.SitemapItem{
 				webfw.SitemapItem{
 					Loc:        "/hello/john",
 					LastMod:    webfw.SitemapNoLastMod,
@@ -119,7 +119,7 @@ func TestSitemapHandler(t *testing.T) {
 					Priority:   0.9,
 				},
 			}},
-			sc{[]webfw.SitemapItem{webfw.SitemapItem{
+			sc{webfw.BaseController{}, []webfw.SitemapItem{webfw.SitemapItem{
 				Loc:        "/foo",
 				LastMod:    mod,
 				ChangeFreq: webfw.SitemapNoFrequency,
@@ -181,7 +181,12 @@ func TestSitemapHandler(t *testing.T) {
 }
 
 type sc struct {
+	webfw.BaseController
 	items []webfw.SitemapItem
+}
+
+func (c sc) Handler(cont context.Context) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {})
 }
 
 func (c sc) Sitemap(cont context.Context) []webfw.SitemapItem {

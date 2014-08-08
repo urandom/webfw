@@ -1,12 +1,14 @@
 package middleware
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/urandom/webfw/context"
 )
@@ -48,7 +50,7 @@ func TestErrorHandler(t *testing.T) {
 		t.Fatalf("Expected response code to be %d, got %d\n", http.StatusInternalServerError, rec.Code)
 	}
 
-	if !strings.HasPrefix(rec.Body.String(), "Test") {
+	if !strings.HasPrefix(rec.Body.String(), fmt.Sprintf("%s - %s", time.Now().Format(dateFormat), "Test")) {
 		t.Fatalf("Expected ISE message, got '%s'\n", rec.Body.String())
 	}
 }

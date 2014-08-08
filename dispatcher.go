@@ -104,19 +104,6 @@ func (d Dispatcher) NameToPath(name string, method Method, params ...RouteParams
 	return ""
 }
 
-// SitemapControllers returns a slice of all SitemapController instances
-// currently handled by this dispatcher
-func (d Dispatcher) SitemapControllers() []SitemapController {
-	var controllers []SitemapController
-	for _, c := range d.Controllers {
-		if sc, ok := c.(SitemapController); ok {
-			controllers = append(controllers, sc)
-		}
-	}
-
-	return controllers
-}
-
 // Initialize creates all configured middleware handlers, producing a chain
 // of functions to be called on each request. This function is called
 // automatically by the Server object, when its ListenAndServe method is

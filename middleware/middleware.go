@@ -67,7 +67,7 @@ func InitializeDefault(d *webfw.Dispatcher) {
 				Pattern:          d.Pattern,
 				Prefix:           fmt.Sprintf("%s%s", d.Config.Sitemap.LocPrefix, d.Pattern),
 				RelativeLocation: d.Config.Sitemap.RelativeLocation,
-				Controllers:      d.SitemapControllers(),
+				Controllers:      d.Controllers,
 			})
 		}
 	}
