@@ -53,15 +53,6 @@ func GetLogger(c context.Context) *log.Logger {
 	return log.New(os.Stderr, "", 0)
 }
 
-// GetRouteTrie returns the trie, used by the dispatcher to locate routes
-// based on a given path.
-func GetRouteTrie(c context.Context) *Trie {
-	if val, ok := c.GetGlobal(context.BaseCtxKey("route-trie")); ok {
-		return val.(*Trie)
-	}
-	return NewTrie()
-}
-
 // GetParams returns the current request path parameters from the context.
 func GetParams(c context.Context, r *http.Request) RouteParams {
 	if val, ok := c.Get(r, context.BaseCtxKey("params")); ok {

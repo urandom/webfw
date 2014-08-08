@@ -26,7 +26,7 @@ type Dispatcher struct {
 	Renderer    renderer.Renderer
 	Controllers []Controller
 
-	Trie            *Trie
+	trie            *Trie
 	handler         http.Handler
 	middleware      map[string]Middleware
 	middlewareOrder []string
@@ -44,7 +44,7 @@ func NewDispatcher(pattern string, c Config) Dispatcher {
 		Config:  c,
 		Logger:  log.New(os.Stderr, "", 0),
 
-		Trie:       NewTrie(),
+		trie:       NewTrie(),
 		middleware: make(map[string]Middleware),
 	}
 
@@ -78,7 +78,7 @@ func (d *Dispatcher) Handle(c Controller) {
 	}
 
 	d.Controllers = append(d.Controllers, c)
-	if err := d.Trie.AddRoute(r); err != nil {
+	if err := d.trie.AddRoute(r); err != nil {
 		panic(err)
 	}
 }
@@ -91,7 +91,7 @@ func (d *Dispatcher) Handle(c Controller) {
 // for the given name. The root dispatcher pattern is always prepended to any
 // found path.
 func (d Dispatcher) NameToPath(name string, method Method, params ...RouteParams) string {
-	if match, ok := d.Trie.LookupNamed(name, method, params...); ok {
+	if match, ok := d.trie.LookupNamed(name, method, params...); ok {
 		for _, v := range match.ReverseURL {
 			if d.Pattern != "/" {
 				return d.Pattern[:len(d.Pattern)-1] + v
@@ -102,6 +102,28 @@ func (d Dispatcher) NameToPath(name string, method Method, params ...RouteParams
 	}
 
 	return ""
+}
+
+// RequestRoute returns the route object and params associated with the
+// supplied request.
+func (d Dispatcher) RequestRoute(r *http.Request) (Route, RouteParams, bool) {
+	path := strings.SplitN(r.RequestURI, "?", 2)[0]
+	if path == "" {
+		path = r.URL.RequestURI()
+	}
+	if d.Pattern != "/" {
+		path = path[len(d.Pattern)-1:]
+	}
+	method := ReverseMethodNames[r.Method]
+	match, matchFound := d.trie.Lookup(path, method)
+
+	if matchFound {
+		r, ok := match.RouteMap[method]
+
+		return r, match.Params, ok
+	} else {
+		return Route{}, RouteParams{}, matchFound
+	}
 }
 
 // Initialize creates all configured middleware handlers, producing a chain
@@ -116,7 +138,6 @@ func (d *Dispatcher) Initialize() {
 
 	d.Context.SetGlobal(context.BaseCtxKey("renderer"), d.Renderer)
 	d.Context.SetGlobal(context.BaseCtxKey("logger"), d.Logger)
-	d.Context.SetGlobal(context.BaseCtxKey("route-trie"), d.Trie)
 	d.Context.SetGlobal(context.BaseCtxKey("dispatcher"), d)
 	d.Context.SetGlobal(context.BaseCtxKey("config"), d.Config)
 
@@ -158,42 +179,40 @@ func (d Dispatcher) handlerFunc() http.Handler {
 	var handler func(w http.ResponseWriter, r *http.Request)
 
 	handler = func(w http.ResponseWriter, r *http.Request) {
-		var match Match
-		matchFound, namedMatch := false, false
+		var route Route
+		routeFound := false
 
 		method := ReverseMethodNames[r.Method]
 		if GetNamedForward(d.Context, r) != "" {
-			namedMatch = true
-			match, matchFound = d.Trie.LookupNamed(GetNamedForward(d.Context, r), method)
+			match, ok := d.trie.LookupNamed(GetNamedForward(d.Context, r), method)
 			d.Context.Delete(r, context.BaseCtxKey("named-forward"))
-		} else {
+
+			if ok {
+				route, routeFound = match.RouteMap[method]
+			}
+		} else if GetForward(d.Context, r) != "" {
 			path := GetForward(d.Context, r)
 
-			if path == "" {
-				path = strings.SplitN(r.RequestURI, "?", 2)[0]
-				if path == "" {
-					path = r.URL.RequestURI()
-				}
-			} else {
-				d.Context.Delete(r, context.BaseCtxKey("forward"))
-			}
+			d.Context.Delete(r, context.BaseCtxKey("forward"))
 
 			if d.Pattern != "/" {
 				path = path[len(d.Pattern)-1:]
 			}
 			d.Context.Delete(r, context.BaseCtxKey("params"))
-			match, matchFound = d.Trie.Lookup(path, method)
+			if match, ok := d.trie.Lookup(path, method); ok {
+				route, routeFound = match.RouteMap[method]
+				d.Context.Set(r, context.BaseCtxKey("params"), match.Params)
+			}
+		} else {
+			var params RouteParams
+			route, params, routeFound = d.RequestRoute(r)
+
+			d.Context.Set(r, context.BaseCtxKey("params"), params)
 		}
 
 		d.Context.Set(r, context.BaseCtxKey("r"), r)
 
-		if matchFound {
-			if !namedMatch {
-				d.Context.Set(r, context.BaseCtxKey("params"), match.Params)
-			}
-
-			route := match.RouteMap[method]
-
+		if routeFound {
 			d.Context.Set(r, context.BaseCtxKey("route-name"), route.Name)
 			route.Handler(w, r)
 
