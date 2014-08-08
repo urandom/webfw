@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"runtime/debug"
+	"time"
 
 	"github.com/urandom/webfw/context"
 )
@@ -26,7 +27,8 @@ func (emw Error) Handler(ph http.Handler, c context.Context, l *log.Logger) http
 		defer func() {
 			if rec := recover(); rec != nil {
 				stack := debug.Stack()
-				message := fmt.Sprintf("%s\n%s\n", rec, stack)
+				timestamp := time.Now().Format(dateFormat)
+				message := fmt.Sprintf("%s - %s\n%s\n", timestamp, rec, stack)
 
 				l.Print(message)
 				w.WriteHeader(http.StatusInternalServerError)
