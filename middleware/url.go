@@ -43,7 +43,7 @@ type Url struct {
 
 func (mw Url) Handler(ph http.Handler, c context.Context, l *log.Logger) http.Handler {
 	renderer := webfw.GetRenderer(c)
-	err := renderer.Funcs(template.FuncMap{
+	renderer.Funcs(template.FuncMap{
 		"url": func(data ...interface{}) (string, error) {
 			r, parts, err := handleParts(data)
 			if err != nil {
@@ -64,10 +64,6 @@ func (mw Url) Handler(ph http.Handler, c context.Context, l *log.Logger) http.Ha
 			return LocalizedURL(c, r, mw.Pattern, lang, parts)
 		},
 	})
-
-	if err != nil {
-		panic(err)
-	}
 
 	return ph
 }

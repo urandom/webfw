@@ -23,15 +23,19 @@ import (
 type Renderer interface {
 	BaseName() string
 	SetBaseName(string)
-	Funcs(template.FuncMap) error
+	Funcs(template.FuncMap)
+	Delims(left, right string)
 	Render(w io.Writer, data RenderData, cdata context.ContextData, names ...string) error
 }
 
 type renderer struct {
-	mutex    sync.RWMutex
-	tmpls    map[string]*template.Template
-	path     string
-	baseName string
+	mutex      sync.RWMutex
+	tmpls      map[string]*template.Template
+	path       string
+	baseName   string
+	leftDelim  string
+	rightDelim string
+	funcMaps   []template.FuncMap
 }
 
 type RenderCtx func(w io.Writer, data RenderData, names ...string) error
@@ -59,16 +63,15 @@ func (r *renderer) SetBaseName(base string) {
 	r.baseName = base
 }
 
-// Funcs registers a template.FuncMap object for the 'base' template.
-func (r *renderer) Funcs(funcMap template.FuncMap) error {
-	t, err := r.base()
-	if err != nil {
-		return err
-	}
+// Sets the action delimeters for all future templates
+func (r *renderer) Delims(left, right string) {
+	r.leftDelim = left
+	r.rightDelim = right
+}
 
-	t.Funcs(funcMap)
-
-	return nil
+// Funcs registers a template.FuncMap object all future templates
+func (r *renderer) Funcs(funcMap template.FuncMap) {
+	r.funcMaps = append(r.funcMaps, funcMap)
 }
 
 // Render executes the template chain, writing the output in the given
@@ -197,10 +200,18 @@ func (r *renderer) create(name string) (*template.Template, error) {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 
+	t := template.New(name)
 	/* Add any .Funcs before calling .Parse */
-	t, err := template.New(name).ParseFiles(path.Join(r.path, name))
 
-	if err != nil {
+	if r.leftDelim != "" && r.rightDelim != "" {
+		t.Delims(r.leftDelim, r.rightDelim)
+	}
+
+	for _, fm := range r.funcMaps {
+		t.Funcs(fm)
+	}
+
+	if _, err := t.ParseFiles(path.Join(r.path, name)); err != nil {
 		return nil, err
 	}
 

@@ -76,13 +76,12 @@ func TestRenderer(t *testing.T) {
 		t.Fatalf("Expected '%s', got '%s'\n", expected, res)
 	}
 
-	if err := r.Funcs(template.FuncMap{
+	r = NewRenderer("testdata", "test.tmpl")
+	r.Funcs(template.FuncMap{
 		"foo": func(dot string) string {
 			return strings.ToUpper(dot)
 		},
-	}); err != nil {
-		t.Fatal(err)
-	}
+	})
 
 	buf.Reset()
 	data := RenderData{"test": "stuff"}
