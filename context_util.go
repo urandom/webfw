@@ -17,11 +17,11 @@ import (
 )
 
 // GetDispatcher returns the request dispatcher.
-func GetDispatcher(c context.Context) Dispatcher {
+func GetDispatcher(c context.Context) *Dispatcher {
 	if val, ok := c.GetGlobal(context.BaseCtxKey("dispatcher")); ok {
-		return val.(Dispatcher)
+		return val.(*Dispatcher)
 	}
-	return Dispatcher{}
+	return nil
 }
 
 // GetConfig is a helper function for getting the current config
