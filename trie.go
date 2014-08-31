@@ -274,7 +274,12 @@ func (n *node) lookup(term string, params RouteParams) (*node, RouteParams, bool
 				head, tail = head+tail, ""
 			}
 
-			params[child.param] = head
+			param, err := url.QueryUnescape(head)
+			if err == nil {
+				params[child.param] = param
+			} else {
+				params[child.param] = head
+			}
 
 			return child.lookup(tail, params)
 		}
