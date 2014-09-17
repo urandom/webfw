@@ -73,13 +73,31 @@ func (d Dispatcher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // Handle registers the provided controller.
 func (d *Dispatcher) Handle(c Controller) {
-	r := Route{
-		c.Pattern(), c.Method(), c.Handler(d.Context), c.Name(), c,
+	d.Controllers = append(d.Controllers, c)
+
+	var routes []Route
+
+	switch tc := c.(type) {
+	case MultiPatternHandler:
+		for pattern, tuple := range tc.Patterns() {
+			r := Route{
+				pattern, tuple.Method, c.Handler(d.Context), "", c,
+			}
+
+			routes = append(routes, r)
+		}
+	default:
+		r := Route{
+			c.Pattern(), c.Method(), c.Handler(d.Context), c.Name(), c,
+		}
+
+		routes = append(routes, r)
 	}
 
-	d.Controllers = append(d.Controllers, c)
-	if err := d.trie.AddRoute(r); err != nil {
-		panic(err)
+	for _, r := range routes {
+		if err := d.trie.AddRoute(r); err != nil {
+			panic(err)
+		}
 	}
 }
 
@@ -207,7 +225,16 @@ func (d Dispatcher) handlerFunc() http.Handler {
 			var params RouteParams
 			route, params, routeFound = d.RequestRoute(r)
 
-			d.Context.Set(r, context.BaseCtxKey("params"), params)
+			if routeFound {
+				d.Context.Set(r, context.BaseCtxKey("params"), params)
+
+				switch tc := route.Controller.(type) {
+				case MultiPatternHandler:
+					if tuple, ok := tc.Patterns()[route.Pattern]; ok {
+						d.Context.Set(r, context.BaseCtxKey("multi-pattern-identifier"), tuple.Identifier)
+					}
+				}
+			}
 		}
 
 		d.Context.Set(r, context.BaseCtxKey("r"), r)

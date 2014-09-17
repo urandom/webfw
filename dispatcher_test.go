@@ -170,8 +170,8 @@ func TestDispatcherHandle(t *testing.T) {
 		t.Fatalf("Expected StatusNotFound, got %v\n", w.Code)
 	}
 
-	passedC3, passedC4 := false, false
-	c3NameParam, c4NameParam := "", ""
+	passedC3, passedC4, passedC5M1, passedC5M2 := false, false, false, false
+	c3NameParam, c4NameParam, c5M1Param, c5M2Param := "", "", "", ""
 	c3 := controller{
 		pattern: "/test/:name",
 		method:  MethodAll,
@@ -238,6 +238,70 @@ func TestDispatcherHandle(t *testing.T) {
 		t.Fatalf("Expected '/test/stuff', got '%s'\n", path)
 	}
 
+	c5 := multicontroller{
+		controller: controller{
+			handler: func(w http.ResponseWriter, r *http.Request) {
+				id := GetMultiPatternIdentifier(d.Context, r)
+				params := GetParams(d.Context, r)
+				if id == "multi1" {
+					passedC5M1 = true
+					c5M1Param = params["foo"]
+				} else if id == "multi2" {
+					passedC5M2 = true
+					c5M2Param = params["bar"]
+				} else {
+					t.Fatalf("Unexpected MultiPattern Identifier: '%s'\n", id)
+				}
+			},
+		},
+		patterns: map[string]MethodIdentifierTuple{
+			"/multi1/:foo": MethodIdentifierTuple{MethodGet, "multi1"},
+			"/multi2/:bar": MethodIdentifierTuple{MethodGet | MethodPost, "multi2"},
+		},
+	}
+
+	r, _ = http.NewRequest("GET", "http://localhost:8080/multi1/test1", nil)
+	w = httptest.NewRecorder()
+
+	d = NewDispatcher("/", Config{})
+	d.Handle(c5)
+	d.Initialize()
+	d.ServeHTTP(w, r)
+
+	if !passedC5M1 {
+		t.Fatal("Expected to pass through controller 5-multi1")
+	}
+
+	if passedC5M2 || c5M2Param != "" {
+		t.Fatal("Did not expect to pass through controller 5-multi2")
+	}
+
+	expectedStr := "test1"
+	if c5M1Param != expectedStr {
+		t.Fatalf("Expected c5M1 param to be %s, got '%s'\n", expectedStr, c5M1Param)
+	}
+
+	passedC5M1, passedC5M2 = false, false
+	c5M1Param, c5M2Param = "", ""
+
+	r, _ = http.NewRequest("GET", "http://localhost:8080/multi2/test2", nil)
+	w = httptest.NewRecorder()
+
+	d.ServeHTTP(w, r)
+
+	if !passedC5M2 {
+		t.Fatal("Expected to pass through controller 5-multi2")
+	}
+
+	if passedC5M1 || c5M1Param != "" {
+		t.Fatal("Did not expect to pass through controller 5-multi1")
+	}
+
+	expectedStr = "test2"
+	if c5M2Param != expectedStr {
+		t.Fatalf("Expected c5M1 param to be %s, got '%s'\n", expectedStr, c5M2Param)
+	}
+
 	d = NewDispatcher("/prefix/", Config{})
 
 	d.Handle(c3)
@@ -275,6 +339,15 @@ func (cntl controller) Name() string {
 
 func (cntl controller) Method() Method {
 	return cntl.method
+}
+
+type multicontroller struct {
+	controller
+	patterns map[string]MethodIdentifierTuple
+}
+
+func (cntl multicontroller) Patterns() map[string]MethodIdentifierTuple {
+	return cntl.patterns
 }
 
 type MyCustomMW struct {

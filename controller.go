@@ -17,6 +17,20 @@ type Controller interface {
 	Name() string
 }
 
+// A MultiPatternHandler may be used in places where a single controller
+// handles more than one patterns. The Patterns method should return a map,
+// whose keys are the patterns to be matched, and the values are a tuple of
+// Method and some pattern identifier, the later of which will be stored in the
+// context. The regular Pattern, Method and Name methods will not be called.
+type MultiPatternHandler interface {
+	Patterns() map[string]MethodIdentifierTuple
+}
+
+type MethodIdentifierTuple struct {
+	Method     Method
+	Identifier string
+}
+
 type BaseController struct {
 	pattern string
 	method  Method

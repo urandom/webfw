@@ -156,9 +156,19 @@ func GetForward(c context.Context, r *http.Request) string {
 	return ""
 }
 
-// GetNamedForward returns a name, used by the dispatcher to lookup a route to forward to.
+// GetNamedForward returns a name, used by the dispatcher to lookup a route to
+// forward to.
 func GetNamedForward(c context.Context, r *http.Request) string {
 	if val, ok := c.Get(r, context.BaseCtxKey("named-forward")); ok {
+		return val.(string)
+	}
+	return ""
+}
+
+// GetMultiPatternIdentifier returns the identifier for the current
+// multi-pattern route.
+func GetMultiPatternIdentifier(c context.Context, r *http.Request) string {
+	if val, ok := c.Get(r, context.BaseCtxKey("multi-pattern-identifier")); ok {
 		return val.(string)
 	}
 	return ""
