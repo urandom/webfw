@@ -66,6 +66,13 @@ func (d *Dispatcher) RegisterMiddleware(mw Middleware) {
 	}
 }
 
+// Middleware returns a registered middleware based on the given name.
+func (d Dispatcher) Middleware(name string) (Middleware, bool) {
+	mw, ok := d.middleware[name]
+
+	return mw, ok
+}
+
 // ServeHTTP fulfills the net/http's Handler interface.
 func (d Dispatcher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	d.handler.ServeHTTP(w, r)

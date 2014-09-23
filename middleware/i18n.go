@@ -70,14 +70,7 @@ func (imw I18N) Handler(ph http.Handler, c context.Context, l *log.Logger) http.
 	}
 
 	renderer := webfw.GetRenderer(c)
-	renderer.Funcs(template.FuncMap{
-		"__": func(message, lang string, data ...interface{}) (template.HTML, error) {
-			if len(imw.Languages) == 0 {
-				return template.HTML(message), nil
-			}
-			return t(message, lang, data...)
-		},
-	})
+	renderer.Funcs(imw.TemplateFuncMap())
 
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		c.Set(r, context.BaseCtxKey("langs"), imw.Languages)
@@ -188,6 +181,17 @@ func (imw I18N) Handler(ph http.Handler, c context.Context, l *log.Logger) http.
 	}
 
 	return http.HandlerFunc(handler)
+}
+
+func (imw I18N) TemplateFuncMap() template.FuncMap {
+	return template.FuncMap{
+		"__": func(message, lang string, data ...interface{}) (template.HTML, error) {
+			if len(imw.Languages) == 0 {
+				return template.HTML(message), nil
+			}
+			return t(message, lang, data...)
+		},
+	}
 }
 
 func t(message, lang string, data ...interface{}) (template.HTML, error) {
