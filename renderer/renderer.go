@@ -149,11 +149,11 @@ func (r *renderer) Render(w io.Writer, data RenderData, cdata context.ContextDat
 
 	baseData["template"] = tmpl
 	for k, v := range cdata {
-		switch k.(type) {
+		switch t := k.(type) {
 		case string:
-			contextData[k.(string)] = v
+			contextData[t] = v
 		case context.BaseCtxKey:
-			baseData[string(k.(context.BaseCtxKey))] = v
+			baseData[string(t)] = v
 		}
 	}
 

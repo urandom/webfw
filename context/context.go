@@ -47,15 +47,24 @@ func (c *context) Get(r *http.Request, key interface{}) (interface{}, bool) {
 	return nil, false
 }
 
-// GetAll returns all ContextData for a given request.
+// GetAll returns all ContextData for a given request, as well as all global data.
 func (c *context) GetAll(r *http.Request) ContextData {
 	c.mutex.RLock()
 	defer c.mutex.RUnlock()
 
-	if data, ok := c.data[r]; ok {
-		return data
+	cdata := make(ContextData)
+
+	for k, v := range c.global {
+		cdata[k] = v
 	}
-	return nil
+
+	if data, ok := c.data[r]; ok {
+		for k, v := range data {
+			cdata[k] = v
+		}
+	}
+
+	return cdata
 }
 
 // Set binds a key-value pair for a given request in the context.
