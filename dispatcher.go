@@ -20,6 +20,7 @@ import (
 // defined by a ServerMux root pattern. The pattern must end in a '/'.
 type Dispatcher struct {
 	Pattern     string
+	Host        string
 	Context     context.Context
 	Config      Config
 	Logger      *log.Logger

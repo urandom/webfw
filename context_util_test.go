@@ -17,12 +17,12 @@ func TestContextUtil(t *testing.T) {
 		t.Fatalf("Expected a an empty Config, got %v\n", conf)
 	}
 
-	conf.Server.Host = "example.com"
+	conf.Server.Address = "127.0.0.1"
 	c.SetGlobal(context.BaseCtxKey("config"), conf)
 
 	conf = GetConfig(c)
-	if conf.Server.Host != "example.com" {
-		t.Fatalf("Expected Server.Host to be 'example.com', got '%s'\n", conf.Server.Host)
+	if conf.Server.Address != "127.0.0.1" {
+		t.Fatalf("Expected Server.Address to be '127.0.0.1', got '%s'\n", conf.Server.Address)
 	}
 
 	params := GetParams(c, r)
@@ -93,8 +93,8 @@ func TestContextUtil(t *testing.T) {
 
 	r, _ = http.NewRequest("GET", "http://localhost:8080", nil)
 	conf = GetConfig(c)
-	if conf.Server.Host != "example.com" {
-		t.Fatalf("Expected Server.Host to be 'example.com', got '%s'\n", conf.Server.Host)
+	if conf.Server.Address != "127.0.0.1" {
+		t.Fatalf("Expected Server.Address to be '127.0.0.1', got '%s'\n", conf.Server.Address)
 	}
 
 	params = GetParams(c, r)

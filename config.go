@@ -8,7 +8,7 @@ import (
 
 type Config struct {
 	Server struct {
-		Host     string
+		Address  string
 		Port     int
 		CertFile string `gcfg:"cert-file"`
 		KeyFile  string `gcfg:"key-file"`
@@ -118,7 +118,6 @@ func defaultConfig() (Config, error) {
 // Default configuration:
 var cfg string = `
 [server]
-	host = ""
 	port = 8080
 	devel
 

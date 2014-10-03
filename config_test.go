@@ -26,8 +26,8 @@ func TestConfigParse(t *testing.T) {
 }
 
 func testconf(t *testing.T, c Config) {
-	if c.Server.Host != "localhost" {
-		t.Fatalf("Expected Server.Host 'localhost', got %s\n", c.Server.Host)
+	if c.Server.Address != "127.0.0.1" {
+		t.Fatalf("Expected Server.Address '127.0.0.1', got %s\n", c.Server.Address)
 	}
 
 	if c.Server.Port != 10000 {
@@ -101,7 +101,7 @@ func testconf(t *testing.T, c Config) {
 
 var conf = `
 [server]
-    host = localhost
+    address = 127.0.0.1
     port = 10000
     devel = false
 

@@ -8,12 +8,12 @@ import (
 )
 
 // Server is a helper object to handle dispatchers through the standard
-// http.ListenAndServe and http.Handle interface. The host and port can
+// http.ListenAndServe and http.Handle interface. The address and port can
 // be set through the configuration
 type Server struct {
 	dispatchers map[string]*Dispatcher
 	conf        Config
-	host        string
+	addr        string
 	port        int
 }
 
@@ -29,14 +29,14 @@ func NewServer(confpath ...string) Server {
 	return Server{
 		dispatchers: make(map[string]*Dispatcher),
 		conf:        conf,
-		host:        conf.Server.Host,
+		addr:        conf.Server.Address,
 		port:        conf.Server.Port,
 	}
 }
 
-// SetHost sets the host for the server.
-func (s *Server) SetHost(host string) {
-	s.host = host
+// SetAddr sets the local network address the server should listen to
+func (s *Server) SetAddress(addr string) {
+	s.addr = addr
 }
 
 // SetPort sets the port for the server
@@ -62,17 +62,18 @@ func (s *Server) Dispatcher(pattern string) *Dispatcher {
 func (s Server) ListenAndServe() error {
 	for p, d := range s.dispatchers {
 		d.Initialize()
-		http.Handle(p, d)
+		http.Handle(d.Host+p, d)
 	}
 
+	addr := fmt.Sprintf("%s:%d", s.addr, s.port)
 	if s.conf.Server.CertFile != "" && s.conf.Server.KeyFile != "" {
 		return http.ListenAndServeTLS(
-			fmt.Sprintf("%s:%d", s.host, s.port),
+			addr,
 			s.conf.Server.CertFile,
 			s.conf.Server.KeyFile,
 			nil,
 		)
 	} else {
-		return http.ListenAndServe(fmt.Sprintf("%s:%d", s.host, s.port), nil)
+		return http.ListenAndServe(addr, nil)
 	}
 }
