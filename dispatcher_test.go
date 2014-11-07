@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
 	"github.com/urandom/webfw/context"
 )
 
@@ -352,7 +353,7 @@ type MyCustomMW struct {
 	to string
 }
 
-func (mmw MyCustomMW) Handler(ph http.Handler, c context.Context, l Logger) http.Handler {
+func (mmw MyCustomMW) Handler(ph http.Handler, c context.Context) http.Handler {
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		r.URL.Path = mmw.to
 		c.Set(r, "foo", mmw.to)
@@ -366,7 +367,7 @@ type MyCustomMW2 struct {
 	to string
 }
 
-func (mmw MyCustomMW2) Handler(ph http.Handler, c context.Context, l Logger) http.Handler {
+func (mmw MyCustomMW2) Handler(ph http.Handler, c context.Context) http.Handler {
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		r.URL.Path = mmw.to
 		r.RequestURI = mmw.to
@@ -381,7 +382,7 @@ type MyCustomMW3 struct {
 	passed *bool
 }
 
-func (mmw MyCustomMW3) Handler(ph http.Handler, c context.Context, l Logger) http.Handler {
+func (mmw MyCustomMW3) Handler(ph http.Handler, c context.Context) http.Handler {
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		*mmw.passed = true
 		c.Set(r, context.BaseCtxKey("named-forward"), "named1")

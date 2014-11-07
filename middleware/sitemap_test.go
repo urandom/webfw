@@ -2,10 +2,8 @@ package middleware
 
 import (
 	"bytes"
-	"log"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"testing"
 	"time"
 
@@ -15,7 +13,6 @@ import (
 
 func TestSitemapHandler(t *testing.T) {
 	c := context.NewContext()
-	l := log.New(os.Stderr, "", 0)
 	mw := Sitemap{
 		Pattern:          "/",
 		Prefix:           "http://example.com/",
@@ -25,7 +22,7 @@ func TestSitemapHandler(t *testing.T) {
 
 	h := mw.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("test"))
-	}), c, l)
+	}), c)
 
 	r, _ := http.NewRequest("GET", "http://example.com/en.all.json", nil)
 	r.RequestURI = "/en.all.json"
@@ -70,7 +67,7 @@ func TestSitemapHandler(t *testing.T) {
 
 	h = mw.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("test"))
-	}), c, l)
+	}), c)
 
 	r, _ = http.NewRequest("GET", "http://example.com/sitemap2.xml", nil)
 	r.RequestURI = "/sitemap2.xml"
@@ -130,7 +127,7 @@ func TestSitemapHandler(t *testing.T) {
 
 	h = mw.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("test"))
-	}), c, l)
+	}), c)
 
 	r, _ = http.NewRequest("GET", "http://example.com/sitemap2.xml", nil)
 	rec = httptest.NewRecorder()

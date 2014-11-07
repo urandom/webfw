@@ -4,8 +4,6 @@ import (
 	"compress/gzip"
 	"net/http"
 	"net/http/httptest"
-
-	"github.com/urandom/webfw"
 	"github.com/urandom/webfw/context"
 	"github.com/urandom/webfw/util"
 
@@ -18,7 +16,7 @@ import (
 // client states it may accept gzip via the Accept-Encoding header.
 type Gzip struct{}
 
-func (gmw Gzip) Handler(ph http.Handler, c context.Context, l webfw.Logger) http.Handler {
+func (gmw Gzip) Handler(ph http.Handler, c context.Context) http.Handler {
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		rec := httptest.NewRecorder()
 		useGzip := strings.Contains(r.Header.Get("Accept-Encoding"), "gzip")

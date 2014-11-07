@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -14,10 +13,8 @@ import (
 
 func TestI18NHandler(t *testing.T) {
 	c := context.NewContext()
-	l := log.New(os.Stderr, "", 0)
 	ren := renderer.NewRenderer("testdata", "test.tmpl")
 	c.SetGlobal(context.BaseCtxKey("renderer"), ren)
-
 	mw := I18N{
 		Languages:       []string{"en", "bg"},
 		Pattern:         "/",
@@ -29,7 +26,7 @@ func TestI18NHandler(t *testing.T) {
 		if err := ren.Render(w, nil, c.GetAll(r), "test_i18n.tmpl"); err != nil {
 			t.Fatal(err)
 		}
-	}), c, l)
+	}), c)
 
 	r, _ := http.NewRequest("GET", "http://localhost:8080", nil)
 	rec := httptest.NewRecorder()
@@ -146,7 +143,7 @@ func TestI18NHandler(t *testing.T) {
 	rec = httptest.NewRecorder()
 
 	h = mw.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-	}), c, l)
+	}), c)
 
 	h.ServeHTTP(rec, r)
 

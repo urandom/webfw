@@ -6,7 +6,6 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -20,15 +19,13 @@ import (
 
 func TestStaticHandler(t *testing.T) {
 	c := context.NewContext()
-	l := log.New(os.Stderr, "", 0)
-
 	mw := Static{
 		Path: "testdata",
 	}
 
 	h := mw.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("test"))
-	}), c, l)
+	}), c)
 
 	r, _ := http.NewRequest("GET", "http://localhost:8080/en.all.json", nil)
 	r.RequestURI = "/en.all.json"
@@ -43,7 +40,7 @@ func TestStaticHandler(t *testing.T) {
 
 	h = mw.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
-	}), c, l)
+	}), c)
 
 	r, _ = http.NewRequest("GET", "http://localhost:8080/en.all.json", nil)
 	r.RequestURI = "/en.all.json"
@@ -108,7 +105,7 @@ func TestStaticHandler(t *testing.T) {
 	}
 	h = mw.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
-	}), c, l)
+	}), c)
 
 	r, _ = http.NewRequest("GET", "http://localhost:8080/dummy/", nil)
 	r.RequestURI = "/dummy/"
@@ -131,7 +128,7 @@ func TestStaticHandler(t *testing.T) {
 	}
 	h = mw.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
-	}), c, l)
+	}), c)
 
 	r, _ = http.NewRequest("GET", "http://localhost:8080/en.all.json", nil)
 	r.RequestURI = "/en.all.json"
@@ -164,7 +161,7 @@ func TestStaticHandler(t *testing.T) {
 	}
 	h = mw.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
-	}), c, l)
+	}), c)
 
 	r, _ = http.NewRequest("GET", "http://localhost:8080/en.all.json", nil)
 	r.RequestURI = "/en.all.json"
@@ -195,7 +192,7 @@ func TestStaticHandler(t *testing.T) {
 	}
 	h = mw.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
-	}), c, l)
+	}), c)
 
 	r, _ = http.NewRequest("GET", "http://localhost:8080/dummy/", nil)
 	r.RequestURI = "/dummy/"

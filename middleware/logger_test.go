@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"strings"
 	"testing"
 
@@ -16,13 +15,11 @@ func TestLogger(t *testing.T) {
 	c := context.NewContext()
 	buf := new(bytes.Buffer)
 
-	l := log.New(os.Stderr, "", 0)
-
 	mw := Logger{AccessLogger: log.New(buf, "", 0)}
 
 	h := mw.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Test"))
-	}), c, l)
+	}), c)
 
 	r, _ := http.NewRequest("GET", "http://localhost:8080", nil)
 	rec := httptest.NewRecorder()

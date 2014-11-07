@@ -1,10 +1,8 @@
 package middleware
 
 import (
-	"log"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"testing"
 
 	"github.com/urandom/webfw/context"
@@ -12,15 +10,12 @@ import (
 
 func TestContext(t *testing.T) {
 	c := context.NewContext()
-
-	l := log.New(os.Stderr, "", 0)
-
 	mw := Context{}
 
 	h := mw.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		c.Set(r, "alpha", "beta")
 		w.Write([]byte("Test"))
-	}), c, l)
+	}), c)
 
 	r, _ := http.NewRequest("GET", "http://localhost:8080", nil)
 	rec := httptest.NewRecorder()

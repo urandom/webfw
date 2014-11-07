@@ -1,10 +1,8 @@
 package middleware
 
 import (
-	"log"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"strings"
 	"testing"
 
@@ -14,17 +12,15 @@ import (
 
 func TestUrlHandler(t *testing.T) {
 	c := context.NewContext()
-	l := log.New(os.Stderr, "", 0)
 	ren := renderer.NewRenderer("testdata", "test.tmpl")
 	c.SetGlobal(context.BaseCtxKey("renderer"), ren)
-
 	mw := Url{}
 
 	h := mw.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if err := ren.Render(w, nil, c.GetAll(r), "test_url.tmpl"); err != nil {
 			t.Fatal(err)
 		}
-	}), c, l)
+	}), c)
 
 	r, _ := http.NewRequest("GET", "http://localhost:8080/some/url", nil)
 	r.RequestURI = "/some/url"

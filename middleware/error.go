@@ -22,7 +22,8 @@ type Error struct {
 	ShowStack bool
 }
 
-func (emw Error) Handler(ph http.Handler, c context.Context, l webfw.Logger) http.Handler {
+func (emw Error) Handler(ph http.Handler, c context.Context) http.Handler {
+	logger := webfw.GetLogger(c)
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if rec := recover(); rec != nil {
@@ -30,7 +31,7 @@ func (emw Error) Handler(ph http.Handler, c context.Context, l webfw.Logger) htt
 				timestamp := time.Now().Format(dateFormat)
 				message := fmt.Sprintf("%s - %s\n%s\n", timestamp, rec, stack)
 
-				l.Print(message)
+				logger.Print(message)
 				w.WriteHeader(http.StatusInternalServerError)
 
 				if !emw.ShowStack {

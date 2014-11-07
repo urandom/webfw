@@ -42,7 +42,7 @@ type Session struct {
 	SessionGenerator context.SessionGenerator
 }
 
-func (smw Session) Handler(ph http.Handler, c context.Context, l webfw.Logger) http.Handler {
+func (smw Session) Handler(ph http.Handler, c context.Context) http.Handler {
 	var abspath string
 	var maxAge, cleanupInterval, cleanupMaxAge time.Duration
 
@@ -66,6 +66,8 @@ func (smw Session) Handler(ph http.Handler, c context.Context, l webfw.Logger) h
 		}
 	}
 
+	logger := webfw.GetLogger(c)
+
 	if smw.CleanupInterval != "" {
 		var err error
 		cleanupInterval, err = time.ParseDuration(smw.CleanupInterval)
@@ -82,10 +84,10 @@ func (smw Session) Handler(ph http.Handler, c context.Context, l webfw.Logger) h
 
 		go func() {
 			for _ = range time.Tick(cleanupInterval) {
-				l.Print("Cleaning up old sessions")
+				logger.Print("Cleaning up old sessions")
 
 				if err := context.CleanupSessions(abspath, cleanupMaxAge); err != nil {
-					l.Printf("Failed to clean up sessions: %v", err)
+					logger.Printf("Failed to clean up sessions: %v", err)
 				}
 			}
 		}()
@@ -109,7 +111,7 @@ func (smw Session) Handler(ph http.Handler, c context.Context, l webfw.Logger) h
 			firstTimer = true
 
 			if err != context.ErrCookieNotExist {
-				l.Printf("Error reading session: %v", err)
+				logger.Printf("Error reading session: %v", err)
 			}
 		}
 
@@ -126,7 +128,7 @@ func (smw Session) Handler(ph http.Handler, c context.Context, l webfw.Logger) h
 
 		if sess != nil {
 			if err := sess.Write(w); err != nil {
-				l.Printf("Unable to write session: %v", err)
+				logger.Printf("Unable to write session: %v", err)
 			}
 		}
 

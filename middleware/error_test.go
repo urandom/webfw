@@ -2,10 +2,8 @@ package middleware
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"strings"
 	"testing"
 	"time"
@@ -15,13 +13,11 @@ import (
 
 func TestErrorHandler(t *testing.T) {
 	c := context.NewContext()
-	l := log.New(os.Stderr, "", 0)
-
 	mw := Error{}
 
 	h := mw.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		panic("Test")
-	}), c, l)
+	}), c)
 
 	r, _ := http.NewRequest("GET", "http://localhost:8080", nil)
 	rec := httptest.NewRecorder()
@@ -40,7 +36,7 @@ func TestErrorHandler(t *testing.T) {
 
 	h = mw.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		panic("Test")
-	}), c, l)
+	}), c)
 
 	rec = httptest.NewRecorder()
 

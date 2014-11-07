@@ -21,7 +21,7 @@ type Logger struct {
 
 const dateFormat = "Jan 2, 2006 at 3:04pm (MST)"
 
-func (lmw Logger) Handler(ph http.Handler, c context.Context, l webfw.Logger) http.Handler {
+func (lmw Logger) Handler(ph http.Handler, c context.Context) http.Handler {
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		rec := httptest.NewRecorder()
 

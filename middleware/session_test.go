@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -17,8 +16,6 @@ var secret = []byte("test")
 
 func TestSessionHandler(t *testing.T) {
 	c := context.NewContext()
-	l := log.New(os.Stderr, "", 0)
-
 	mw := Session{
 		Path:            path.Join(os.TempDir(), "session"),
 		Secret:          secret,
@@ -28,7 +25,7 @@ func TestSessionHandler(t *testing.T) {
 	}
 
 	h := mw.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-	}), c, l)
+	}), c)
 
 	r, _ := http.NewRequest("GET", "http://localhost:8080/some/url", nil)
 	rec := httptest.NewRecorder()

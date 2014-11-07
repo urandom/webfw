@@ -3,10 +3,8 @@ package middleware
 import (
 	"bytes"
 	"compress/gzip"
-	"log"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"testing"
 
 	"github.com/urandom/webfw/context"
@@ -14,8 +12,6 @@ import (
 
 func TestGzipHandler(t *testing.T) {
 	c := context.NewContext()
-	l := log.New(os.Stderr, "", 0)
-
 	mw := Gzip{}
 
 	testContent := []byte("Test this string")
@@ -31,7 +27,7 @@ func TestGzipHandler(t *testing.T) {
 
 	h := mw.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Write(testContent)
-	}), c, l)
+	}), c)
 
 	r, _ := http.NewRequest("GET", "http://localhost:8080", nil)
 	rec := httptest.NewRecorder()

@@ -26,13 +26,14 @@ func init() {
 	sitemapTmpl = template.Must(template.New("sitemap").Parse(xmlTemplate))
 }
 
-func (mw Sitemap) Handler(ph http.Handler, c context.Context, l webfw.Logger) http.Handler {
+func (mw Sitemap) Handler(ph http.Handler, c context.Context) http.Handler {
 	for _, c := range mw.Controllers {
 		if sc, ok := c.(webfw.SitemapController); ok {
 			mw.sitemapControllers = append(mw.sitemapControllers, sc)
 		}
 	}
 
+	logger := webfw.GetLogger(c)
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		loc := mw.RelativeLocation
 		if loc == "" {
@@ -85,10 +86,10 @@ func (mw Sitemap) Handler(ph http.Handler, c context.Context, l webfw.Logger) ht
 				if _, err := buf.WriteTo(w); err == nil {
 					return
 				} else {
-					l.Printf("Error serving sitemap template: %v\n", err)
+					logger.Printf("Error serving sitemap template: %v\n", err)
 				}
 			} else {
-				l.Printf("Error executing sitemap template: %v\n", err)
+				logger.Printf("Error executing sitemap template: %v\n", err)
 			}
 		}
 		ph.ServeHTTP(w, r)

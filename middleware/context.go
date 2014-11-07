@@ -2,8 +2,6 @@ package middleware
 
 import (
 	"net/http"
-
-	"github.com/urandom/webfw"
 	"github.com/urandom/webfw/context"
 )
 
@@ -12,7 +10,7 @@ import (
 // chain.
 type Context struct{}
 
-func (cmw Context) Handler(ph http.Handler, c context.Context, l webfw.Logger) http.Handler {
+func (cmw Context) Handler(ph http.Handler, c context.Context) http.Handler {
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			c.DeleteAll(r)

@@ -194,7 +194,7 @@ func (d *Dispatcher) Initialize() {
 	handler := d.handlerFunc()
 
 	for _, m := range mw {
-		handler = m.Handler(handler, d.Context, d.Logger)
+		handler = m.Handler(handler, d.Context)
 	}
 
 	d.handler = handler

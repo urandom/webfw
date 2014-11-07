@@ -10,8 +10,6 @@ import (
 	"os"
 	"path"
 	"time"
-
-	"github.com/urandom/webfw"
 	"github.com/urandom/webfw/context"
 	"github.com/urandom/webfw/util"
 
@@ -67,7 +65,7 @@ func init() {
 	}).Parse(fileListTemplate))
 }
 
-func (smw Static) Handler(ph http.Handler, c context.Context, l webfw.Logger) http.Handler {
+func (smw Static) Handler(ph http.Handler, c context.Context) http.Handler {
 	var expires time.Duration
 
 	root := http.Dir(smw.Path)
