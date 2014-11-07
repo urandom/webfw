@@ -23,7 +23,7 @@ type Dispatcher struct {
 	Host        string
 	Context     context.Context
 	Config      Config
-	Logger      *log.Logger
+	Logger      Logger
 	Renderer    renderer.Renderer
 	Controllers []Controller
 

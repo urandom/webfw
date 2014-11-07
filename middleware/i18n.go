@@ -3,7 +3,6 @@ package middleware
 import (
 	"errors"
 	"html/template"
-	"log"
 	"net/http"
 	"path/filepath"
 	"strings"
@@ -64,7 +63,7 @@ type I18N struct {
 	IgnoreURLPrefix []string
 }
 
-func (imw I18N) Handler(ph http.Handler, c context.Context, l *log.Logger) http.Handler {
+func (imw I18N) Handler(ph http.Handler, c context.Context, l webfw.Logger) http.Handler {
 	for _, l := range imw.Languages {
 		i18n.MustLoadTranslationFile(filepath.Join(imw.Dir, l+".all.json"))
 	}

@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"time"
@@ -14,15 +13,15 @@ import (
 /*
 The Logger middleware generates an access log entry for each request.
 The format is similar to the one used by nginx. It may receive a
-*log.Logger object, which by default is a Stdout logger.
+webfw.Logger object, which by default is a Stdout logger.
 */
 type Logger struct {
-	AccessLogger *log.Logger
+	AccessLogger webfw.Logger
 }
 
 const dateFormat = "Jan 2, 2006 at 3:04pm (MST)"
 
-func (lmw Logger) Handler(ph http.Handler, c context.Context, l *log.Logger) http.Handler {
+func (lmw Logger) Handler(ph http.Handler, c context.Context, l webfw.Logger) http.Handler {
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		rec := httptest.NewRecorder()
 

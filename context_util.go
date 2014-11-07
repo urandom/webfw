@@ -45,9 +45,9 @@ func GetRenderer(c context.Context) renderer.Renderer {
 
 // GetLogger returns the error logger, to be used if an error occurs during
 // a request.
-func GetLogger(c context.Context) *log.Logger {
+func GetLogger(c context.Context) Logger {
 	if val, ok := c.GetGlobal(context.BaseCtxKey("logger")); ok {
-		return val.(*log.Logger)
+		return val.(Logger)
 	}
 
 	return log.New(os.Stderr, "", 0)

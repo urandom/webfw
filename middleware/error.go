@@ -2,11 +2,11 @@ package middleware
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"runtime/debug"
 	"time"
 
+	"github.com/urandom/webfw"
 	"github.com/urandom/webfw/context"
 )
 
@@ -22,7 +22,7 @@ type Error struct {
 	ShowStack bool
 }
 
-func (emw Error) Handler(ph http.Handler, c context.Context, l *log.Logger) http.Handler {
+func (emw Error) Handler(ph http.Handler, c context.Context, l webfw.Logger) http.Handler {
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if rec := recover(); rec != nil {

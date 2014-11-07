@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -27,7 +26,7 @@ func init() {
 	sitemapTmpl = template.Must(template.New("sitemap").Parse(xmlTemplate))
 }
 
-func (mw Sitemap) Handler(ph http.Handler, c context.Context, l *log.Logger) http.Handler {
+func (mw Sitemap) Handler(ph http.Handler, c context.Context, l webfw.Logger) http.Handler {
 	for _, c := range mw.Controllers {
 		if sc, ok := c.(webfw.SitemapController); ok {
 			mw.sitemapControllers = append(mw.sitemapControllers, sc)

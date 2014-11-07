@@ -3,7 +3,6 @@ package middleware
 import (
 	"errors"
 	"html/template"
-	"log"
 	"net/http"
 	"strings"
 
@@ -41,7 +40,7 @@ type Url struct {
 	Pattern string
 }
 
-func (mw Url) Handler(ph http.Handler, c context.Context, l *log.Logger) http.Handler {
+func (mw Url) Handler(ph http.Handler, c context.Context, l webfw.Logger) http.Handler {
 	renderer := webfw.GetRenderer(c)
 	renderer.Funcs(template.FuncMap{
 		"url": func(data ...interface{}) (string, error) {

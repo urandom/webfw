@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -9,6 +8,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/urandom/webfw"
 	"github.com/urandom/webfw/context"
 	"github.com/urandom/webfw/util"
 )
@@ -42,7 +42,7 @@ type Session struct {
 	SessionGenerator context.SessionGenerator
 }
 
-func (smw Session) Handler(ph http.Handler, c context.Context, l *log.Logger) http.Handler {
+func (smw Session) Handler(ph http.Handler, c context.Context, l webfw.Logger) http.Handler {
 	var abspath string
 	var maxAge, cleanupInterval, cleanupMaxAge time.Duration
 

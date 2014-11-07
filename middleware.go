@@ -1,7 +1,6 @@
 package webfw
 
 import (
-	"log"
 	"net/http"
 
 	"github.com/urandom/webfw/context"
@@ -14,5 +13,5 @@ is set to a Stderr logger by default. It has to return a regular
 http.Handler.
 */
 type Middleware interface {
-	Handler(http.Handler, context.Context, *log.Logger) http.Handler
+	Handler(http.Handler, context.Context, Logger) http.Handler
 }
