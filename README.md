@@ -19,11 +19,11 @@ A quick example, straight from the docs (the later is always up-to-date):
     )
     
     type Hello struct {
-            webfw.BaseController
+            webfw.BasePatternController
     }
     
     func NewHello(pattern string) Hello {
-            return Hello{webfw.NewBaseController(pattern, MethodAll, "")}
+            return Hello{webfw.NewBasePatternController(pattern, MethodAll, "")}
     }
     
     func (con Hello) Handler(c *context.Context) http.HandlerFunc {
