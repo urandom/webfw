@@ -263,7 +263,7 @@ func TestDispatcherHandle(t *testing.T) {
 	w = httptest.NewRecorder()
 
 	d = NewDispatcher("/", Config{})
-	d.Handle(c5)
+	d.HandleMultiPattern(c5)
 	d.Initialize()
 	d.ServeHTTP(w, r)
 

@@ -79,24 +79,34 @@ func (d Dispatcher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	d.handler.ServeHTTP(w, r)
 }
 
-// Handle registers the provided controller.
-func (d *Dispatcher) Handle(c Controller) {
+// Handle registers the provided pattern controller.
+func (d *Dispatcher) Handle(c PatternController) {
 	d.Controllers = append(d.Controllers, c)
 
 	var routes []Route
 
-	switch tc := c.(type) {
-	case MultiPatternHandler:
-		for pattern, tuple := range tc.Patterns() {
-			r := Route{
-				pattern, tuple.Method, c.Handler(d.Context), "", c,
-			}
+	r := Route{
+		c.Pattern(), c.Method(), c.Handler(d.Context), c.Name(), c,
+	}
 
-			routes = append(routes, r)
+	routes = append(routes, r)
+
+	for _, r := range routes {
+		if err := d.trie.AddRoute(r); err != nil {
+			panic(err)
 		}
-	default:
+	}
+}
+
+// Handle registers the provided multi-pattern controller.
+func (d *Dispatcher) HandleMultiPattern(c MultiPatternController) {
+	d.Controllers = append(d.Controllers, c)
+
+	var routes []Route
+
+	for pattern, tuple := range c.Patterns() {
 		r := Route{
-			c.Pattern(), c.Method(), c.Handler(d.Context), c.Name(), c,
+			pattern, tuple.Method, c.Handler(d.Context), "", c,
 		}
 
 		routes = append(routes, r)
@@ -237,7 +247,7 @@ func (d Dispatcher) handlerFunc() http.Handler {
 				d.Context.Set(r, context.BaseCtxKey("params"), params)
 
 				switch tc := route.Controller.(type) {
-				case MultiPatternHandler:
+				case MultiPatternController:
 					if tuple, ok := tc.Patterns()[route.Pattern]; ok {
 						d.Context.Set(r, context.BaseCtxKey("multi-pattern-identifier"), tuple.Identifier)
 					}
