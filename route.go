@@ -5,7 +5,7 @@ import "net/http"
 type Route struct {
 	Pattern    string
 	Method     Method
-	Handler    http.HandlerFunc
+	Handler    http.Handler
 	Name       string
 	Controller Controller
 }

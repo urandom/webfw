@@ -182,7 +182,7 @@ type sc struct {
 	items []webfw.SitemapItem
 }
 
-func (c sc) Handler(cont context.Context) http.HandlerFunc {
+func (c sc) Handler(cont context.Context) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {})
 }
 

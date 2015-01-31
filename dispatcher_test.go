@@ -324,8 +324,8 @@ type controller struct {
 	method  Method
 }
 
-func (cntl controller) Handler(c context.Context) http.HandlerFunc {
-	return cntl.handler
+func (cntl controller) Handler(c context.Context) http.Handler {
+	return http.HandlerFunc(cntl.handler)
 }
 
 func (cntl controller) Pattern() string {

@@ -259,7 +259,7 @@ func (d Dispatcher) handlerFunc() http.Handler {
 
 		if routeFound {
 			d.Context.Set(r, context.BaseCtxKey("route-name"), route.Name)
-			route.Handler(w, r)
+			route.Handler.ServeHTTP(w, r)
 
 			if GetForward(d.Context, r) != "" || GetNamedForward(d.Context, r) != "" {
 				handler(w, r)

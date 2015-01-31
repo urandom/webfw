@@ -16,8 +16,8 @@ func NewHello(pattern string) Hello {
 	return Hello{webfw.NewBasePatternController(pattern, webfw.MethodAll, "")}
 }
 
-func (con Hello) Handler(c context.Context) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+func (con Hello) Handler(c context.Context) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		params := webfw.GetParams(c, r)
 		d := renderer.RenderData{"name": params["name"]}
 
@@ -25,7 +25,7 @@ func (con Hello) Handler(c context.Context) http.HandlerFunc {
 		if err != nil {
 			webfw.GetLogger(c).Print(err)
 		}
-	}
+	})
 }
 
 func Example() {

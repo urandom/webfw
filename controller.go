@@ -10,7 +10,7 @@ import (
 // The Handler method recieves the context, which may then be either stored
 // within the implementing type, or closed over when creating the HandlerFunc.
 type Controller interface {
-	Handler(context.Context) http.HandlerFunc
+	Handler(context.Context) http.Handler
 }
 
 type PatternController interface {
