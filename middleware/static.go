@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
-	"net/http/httptest"
 	"os"
 	"path"
 	"time"
+
 	"github.com/urandom/webfw/context"
 	"github.com/urandom/webfw/util"
 
@@ -80,11 +80,11 @@ func (smw Static) Handler(ph http.Handler, c context.Context) http.Handler {
 	}
 
 	handler := func(w http.ResponseWriter, r *http.Request) {
-		rec := httptest.NewRecorder()
+		rec := util.NewRecorderHijacker(w)
 
 		ph.ServeHTTP(rec, r)
 
-		if rec.Code != http.StatusNotFound {
+		if rec.GetCode() != http.StatusNotFound {
 			copyRecorder(rec, w)
 
 			return
@@ -201,12 +201,12 @@ func generateEtag(rpath string, stat os.FileInfo) string {
 	return base64.URLEncoding.EncodeToString(hash[:])
 }
 
-func copyRecorder(rec *httptest.ResponseRecorder, w http.ResponseWriter) {
+func copyRecorder(rec util.RecorderHijacker, w http.ResponseWriter) {
 	for k, v := range rec.Header() {
 		w.Header()[k] = v
 	}
-	w.WriteHeader(rec.Code)
-	w.Write(rec.Body.Bytes())
+	w.WriteHeader(rec.GetCode())
+	w.Write(rec.GetBody().Bytes())
 }
 
 const fileListTemplate = `

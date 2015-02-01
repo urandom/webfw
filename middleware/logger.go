@@ -3,11 +3,11 @@ package middleware
 import (
 	"fmt"
 	"net/http"
-	"net/http/httptest"
 	"time"
 
 	"github.com/urandom/webfw"
 	"github.com/urandom/webfw/context"
+	"github.com/urandom/webfw/util"
 )
 
 /*
@@ -23,7 +23,7 @@ const dateFormat = "Jan 2, 2006 at 3:04pm (MST)"
 
 func (lmw Logger) Handler(ph http.Handler, c context.Context) http.Handler {
 	handler := func(w http.ResponseWriter, r *http.Request) {
-		rec := httptest.NewRecorder()
+		rec := util.NewRecorderHijacker(w)
 
 		uri := r.URL.RequestURI()
 		remoteAddr := webfw.RemoteAddr(r)
@@ -37,12 +37,12 @@ func (lmw Logger) Handler(ph http.Handler, c context.Context) http.Handler {
 		for k, v := range rec.Header() {
 			w.Header()[k] = v
 		}
-		w.WriteHeader(rec.Code)
-		w.Write(rec.Body.Bytes())
+		w.WriteHeader(rec.GetCode())
+		w.Write(rec.GetBody().Bytes())
 
 		timestamp := time.Now().Format(dateFormat)
-		code := rec.Code
-		length := rec.Body.Len()
+		code := rec.GetCode()
+		length := rec.GetBody().Len()
 
 		lmw.AccessLogger.Print(fmt.Sprintf("%s - %s [%s] \"%s %s\" %d %d \"%s\" %s",
 			remoteAddr, remoteUser, timestamp, method, uri, code, length, referer, userAgent))

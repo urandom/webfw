@@ -3,7 +3,7 @@ package middleware
 import (
 	"compress/gzip"
 	"net/http"
-	"net/http/httptest"
+
 	"github.com/urandom/webfw/context"
 	"github.com/urandom/webfw/util"
 
@@ -18,7 +18,7 @@ type Gzip struct{}
 
 func (gmw Gzip) Handler(ph http.Handler, c context.Context) http.Handler {
 	handler := func(w http.ResponseWriter, r *http.Request) {
-		rec := httptest.NewRecorder()
+		rec := util.NewRecorderHijacker(w)
 		useGzip := strings.Contains(r.Header.Get("Accept-Encoding"), "gzip")
 
 		ph.ServeHTTP(rec, r)
@@ -32,7 +32,7 @@ func (gmw Gzip) Handler(ph http.Handler, c context.Context) http.Handler {
 			w.Header().Set("Content-Encoding", "gzip")
 
 			if w.Header().Get("Content-Type") == "" {
-				w.Header().Set("Content-Type", http.DetectContentType(rec.Body.Bytes()))
+				w.Header().Set("Content-Type", http.DetectContentType(rec.GetBody().Bytes()))
 			}
 		}
 
@@ -42,20 +42,20 @@ func (gmw Gzip) Handler(ph http.Handler, c context.Context) http.Handler {
 
 			gz := gzip.NewWriter(buf)
 
-			if _, err := gz.Write(rec.Body.Bytes()); err != nil {
+			if _, err := gz.Write(rec.GetBody().Bytes()); err != nil {
 				panic(err)
 			}
 			gz.Close()
 
 			w.Header().Set("Content-Length", strconv.Itoa(buf.Len()))
 
-			w.WriteHeader(rec.Code)
+			w.WriteHeader(rec.GetCode())
 
 			buf.WriteTo(w)
 		} else {
-			w.WriteHeader(rec.Code)
+			w.WriteHeader(rec.GetCode())
 
-			w.Write(rec.Body.Bytes())
+			w.Write(rec.GetBody().Bytes())
 		}
 	}
 

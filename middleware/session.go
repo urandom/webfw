@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"net/http"
-	"net/http/httptest"
 	"os"
 	"path"
 	"path/filepath"
@@ -118,7 +117,7 @@ func (smw Session) Handler(ph http.Handler, c context.Context) http.Handler {
 		c.Set(r, context.BaseCtxKey("session"), sess)
 		c.Set(r, context.BaseCtxKey("firstTimer"), firstTimer)
 
-		rec := httptest.NewRecorder()
+		rec := util.NewRecorderHijacker(w)
 
 		ph.ServeHTTP(rec, r)
 
@@ -132,8 +131,8 @@ func (smw Session) Handler(ph http.Handler, c context.Context) http.Handler {
 			}
 		}
 
-		w.WriteHeader(rec.Code)
-		w.Write(rec.Body.Bytes())
+		w.WriteHeader(rec.GetCode())
+		w.Write(rec.GetBody().Bytes())
 	}
 
 	return http.HandlerFunc(handler)
