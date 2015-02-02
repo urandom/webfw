@@ -104,9 +104,9 @@ func (d *Dispatcher) HandleMultiPattern(c MultiPatternController) {
 
 	var routes []Route
 
-	for pattern, tuple := range c.Patterns() {
+	for _, tuple := range c.Patterns() {
 		r := Route{
-			pattern, tuple.Method, c.Handler(d.Context), "", c,
+			tuple.Pattern, tuple.Method, c.Handler(d.Context), "", c,
 		}
 
 		routes = append(routes, r)
@@ -248,8 +248,10 @@ func (d Dispatcher) handlerFunc() http.Handler {
 
 				switch tc := route.Controller.(type) {
 				case MultiPatternController:
-					if tuple, ok := tc.Patterns()[route.Pattern]; ok {
-						d.Context.Set(r, context.BaseCtxKey("multi-pattern-identifier"), tuple.Identifier)
+					for _, tuple := range tc.Patterns() {
+						if tuple.Pattern == route.Pattern && tuple.Method&method > 0 {
+							d.Context.Set(r, context.BaseCtxKey("multi-pattern-identifier"), tuple.Identifier)
+						}
 					}
 				}
 			}

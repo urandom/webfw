@@ -253,9 +253,9 @@ func TestDispatcherHandle(t *testing.T) {
 				}
 			},
 		},
-		patterns: map[string]MethodIdentifierTuple{
-			"/multi1/:foo": MethodIdentifierTuple{MethodGet, "multi1"},
-			"/multi2/:bar": MethodIdentifierTuple{MethodGet | MethodPost, "multi2"},
+		patterns: []MethodIdentifierTuple{
+			MethodIdentifierTuple{"/multi1/:foo", MethodGet, "multi1"},
+			MethodIdentifierTuple{"/multi2/:bar", MethodGet | MethodPost, "multi2"},
 		},
 	}
 
@@ -342,10 +342,10 @@ func (cntl controller) Method() Method {
 
 type multicontroller struct {
 	controller
-	patterns map[string]MethodIdentifierTuple
+	patterns []MethodIdentifierTuple
 }
 
-func (cntl multicontroller) Patterns() map[string]MethodIdentifierTuple {
+func (cntl multicontroller) Patterns() []MethodIdentifierTuple {
 	return cntl.patterns
 }
 

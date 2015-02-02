@@ -28,10 +28,11 @@ type PatternController interface {
 // context. The regular Pattern, Method and Name methods will not be called.
 type MultiPatternController interface {
 	Controller
-	Patterns() map[string]MethodIdentifierTuple
+	Patterns() []MethodIdentifierTuple
 }
 
 type MethodIdentifierTuple struct {
+	Pattern    string
 	Method     Method
 	Identifier string
 }
