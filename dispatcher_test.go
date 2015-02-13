@@ -103,7 +103,6 @@ func TestDispatcherMiddlewareRegistration(t *testing.T) {
 
 func TestDispatcherHandle(t *testing.T) {
 	d := NewDispatcher("/", Config{})
-	d.Initialize()
 
 	c1 := controller{
 		pattern: "/",
@@ -137,6 +136,7 @@ func TestDispatcherHandle(t *testing.T) {
 	r.RequestURI = ""
 	w := httptest.NewRecorder()
 
+	d.Initialize()
 	d.ServeHTTP(w, r)
 	if w.Code != http.StatusOK {
 		t.Fatalf("Expected StatusOk, got %v\n", w.Code)
@@ -238,20 +238,18 @@ func TestDispatcherHandle(t *testing.T) {
 	}
 
 	c5 := multicontroller{
-		controller: controller{
-			handler: func(w http.ResponseWriter, r *http.Request) {
-				id := GetMultiPatternIdentifier(d.Context, r)
-				params := GetParams(d.Context, r)
-				if id == "multi1" {
-					passedC5M1 = true
-					c5M1Param = params["foo"]
-				} else if id == "multi2" {
-					passedC5M2 = true
-					c5M2Param = params["bar"]
-				} else {
-					t.Fatalf("Unexpected MultiPattern Identifier: '%s'\n", id)
-				}
-			},
+		handler: func(w http.ResponseWriter, r *http.Request) {
+			id := GetMultiPatternIdentifier(d.Context, r)
+			params := GetParams(d.Context, r)
+			if id == "multi1" {
+				passedC5M1 = true
+				c5M1Param = params["foo"]
+			} else if id == "multi2" {
+				passedC5M2 = true
+				c5M2Param = params["bar"]
+			} else {
+				t.Fatalf("Unexpected MultiPattern Identifier: '%s'\n", id)
+			}
 		},
 		patterns: []MethodIdentifierTuple{
 			MethodIdentifierTuple{"/multi1/:foo", MethodGet, "multi1"},
@@ -263,7 +261,7 @@ func TestDispatcherHandle(t *testing.T) {
 	w = httptest.NewRecorder()
 
 	d = NewDispatcher("/", Config{})
-	d.HandleMultiPattern(c5)
+	d.Handle(c5)
 	d.Initialize()
 	d.ServeHTTP(w, r)
 
@@ -341,8 +339,12 @@ func (cntl controller) Method() Method {
 }
 
 type multicontroller struct {
-	controller
+	handler  http.HandlerFunc
 	patterns []MethodIdentifierTuple
+}
+
+func (cntl multicontroller) Handler(c context.Context) http.Handler {
+	return http.HandlerFunc(cntl.handler)
 }
 
 func (cntl multicontroller) Patterns() []MethodIdentifierTuple {

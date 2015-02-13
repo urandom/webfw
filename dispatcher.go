@@ -58,6 +58,9 @@ func NewDispatcher(pattern string, c Config) Dispatcher {
 // controller handler. Middleware, supplied by webfw may also be registered
 // in this manner, if a more fine-grained configuration is desired.
 func (d *Dispatcher) RegisterMiddleware(mw Middleware) {
+	if d.handler != nil {
+		panic("Attempting to register middleware after the dispatcher has been initialized")
+	}
 	name := reflect.TypeOf(mw).Name()
 
 	if _, ok := d.middleware[name]; !ok {
@@ -79,43 +82,11 @@ func (d Dispatcher) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 // Handle registers the provided pattern controller.
-func (d *Dispatcher) Handle(c PatternController) {
+func (d *Dispatcher) Handle(c Controller) {
+	if d.handler != nil {
+		panic("Attempting to register controller after the dispatcher has been initialized")
+	}
 	d.Controllers = append(d.Controllers, c)
-
-	var routes []Route
-
-	r := Route{
-		c.Pattern(), c.Method(), c.Handler(d.Context), c.Name(), c,
-	}
-
-	routes = append(routes, r)
-
-	for _, r := range routes {
-		if err := d.trie.AddRoute(r); err != nil {
-			panic(err)
-		}
-	}
-}
-
-// Handle registers the provided multi-pattern controller.
-func (d *Dispatcher) HandleMultiPattern(c MultiPatternController) {
-	d.Controllers = append(d.Controllers, c)
-
-	var routes []Route
-
-	for _, tuple := range c.Patterns() {
-		r := Route{
-			tuple.Pattern, tuple.Method, c.Handler(d.Context), "", c,
-		}
-
-		routes = append(routes, r)
-	}
-
-	for _, r := range routes {
-		if err := d.trie.AddRoute(r); err != nil {
-			panic(err)
-		}
-	}
 }
 
 // NameToPath returns a url path, mapped to the given route name. A method
@@ -161,11 +132,12 @@ func (d Dispatcher) RequestRoute(r *http.Request) (Route, RouteParams, bool) {
 	}
 }
 
-// Initialize creates all configured middleware handlers, producing a chain
-// of functions to be called on each request. This function is called
-// automatically by the Server object, when its ListenAndServe method is
-// called. It should be called directly before calling http.Handle() using
-// the dispatcher when the Server object is not used.
+// Initialize creates all configured middleware handlers, producing a chain of
+// functions to be called on each request. Initializes and registers all
+// handled controllers. This function is called automatically by the Server
+// object, when its ListenAndServe method is called. It should be called
+// directly before calling http.Handle() using the dispatcher when the Server
+// object is not used.
 func (d *Dispatcher) Initialize() {
 	if d.Renderer == nil {
 		d.Renderer = renderer.NewRenderer(d.Config.Renderer.Dir, d.Config.Renderer.Base)
@@ -182,6 +154,7 @@ func (d *Dispatcher) Initialize() {
 
 	for _, m := range d.Config.Dispatcher.Middleware {
 		if custom, ok := d.middleware[m]; ok {
+			d.Logger.Debugf("Queueing middleware %s to the chain.\n", m)
 			mw = append(mw, custom)
 			order = append(order, m)
 
@@ -194,6 +167,7 @@ func (d *Dispatcher) Initialize() {
 	for _, name := range reverseOrder {
 		if !middlewareInserted[name] {
 			if custom, ok := d.middleware[name]; ok {
+				d.Logger.Debugf("Queueing middleware %s to the chain.\n", name)
 				mw = append([]Middleware{custom}, mw...)
 				order = append([]string{name}, order...)
 			}
@@ -208,6 +182,36 @@ func (d *Dispatcher) Initialize() {
 
 	d.handler = handler
 	d.middlewareOrder = order
+
+	for i := range d.Controllers {
+		var routes []Route
+
+		switch c := d.Controllers[i].(type) {
+		case PatternController:
+			r := Route{
+				c.Pattern(), c.Method(), c.Handler(d.Context), c.Name(), c,
+			}
+			routes = append(routes, r)
+		case MultiPatternController:
+			for _, tuple := range c.Patterns() {
+				r := Route{
+					tuple.Pattern, tuple.Method, c.Handler(d.Context), "", c,
+				}
+
+				routes = append(routes, r)
+			}
+		default:
+			panic(fmt.Sprintf("Controllers of type '%T' are not supported\n", c))
+		}
+
+		for _, r := range routes {
+			d.Logger.Debugf("Adding route to %s with method %d and controller %T to %s.\n",
+				r.Pattern, r.Method, r.Controller, d.Pattern)
+			if err := d.trie.AddRoute(r); err != nil {
+				panic(fmt.Sprintf("Error adding route for %s to the dispatcher: %v\n", r.Pattern, err))
+			}
+		}
+	}
 }
 
 func (d Dispatcher) handlerFunc() http.Handler {
