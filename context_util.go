@@ -2,7 +2,6 @@ package webfw
 
 import (
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"path"
@@ -50,7 +49,7 @@ func GetLogger(c context.Context) Logger {
 		return val.(Logger)
 	}
 
-	return log.New(os.Stderr, "", 0)
+	return NewStandardLogger(os.Stderr, "", 0)
 }
 
 // GetParams returns the current request path parameters from the context.

@@ -2,7 +2,6 @@ package webfw
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"reflect"
@@ -43,7 +42,7 @@ func NewDispatcher(pattern string, c Config) Dispatcher {
 		Pattern: pattern,
 		Context: context.NewContext(),
 		Config:  c,
-		Logger:  log.New(os.Stderr, "", 0),
+		Logger:  NewStandardLogger(os.Stderr, "", 0),
 
 		trie:       NewTrie(),
 		middleware: make(map[string]Middleware),

@@ -3,7 +3,6 @@ package middleware
 import (
 	"encoding/base64"
 	"fmt"
-	"log"
 	"net/url"
 	"os"
 
@@ -20,7 +19,7 @@ func InitializeDefault(d *webfw.Dispatcher) {
 		case "Context":
 			d.RegisterMiddleware(Context{})
 		case "Logger":
-			d.RegisterMiddleware(Logger{AccessLogger: log.New(os.Stdout, "", 0)})
+			d.RegisterMiddleware(Logger{AccessLogger: webfw.NewStandardLogger(os.Stdout, "", 0)})
 		case "Gzip":
 			d.RegisterMiddleware(Gzip{})
 		case "Static":

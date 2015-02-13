@@ -2,12 +2,12 @@ package middleware
 
 import (
 	"bytes"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 
+	"github.com/urandom/webfw"
 	"github.com/urandom/webfw/context"
 )
 
@@ -15,7 +15,7 @@ func TestLogger(t *testing.T) {
 	c := context.NewContext()
 	buf := new(bytes.Buffer)
 
-	mw := Logger{AccessLogger: log.New(buf, "", 0)}
+	mw := Logger{AccessLogger: webfw.NewStandardLogger(buf, "", 0)}
 
 	h := mw.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Test"))
