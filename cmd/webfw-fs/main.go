@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
+	"go/format"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -16,6 +17,7 @@ var (
 	pkg      string
 	function string
 	fs       string
+	doFormat bool
 
 	tmpl = template.Must(template.New("go-template").Parse(goTemplate))
 )
@@ -132,6 +134,19 @@ func main() {
 		os.Exit(0)
 	}
 
+	if doFormat {
+		if b, err := format.Source(buf.Bytes()); err == nil {
+			buf.Reset()
+			if _, err = buf.Write(b); err != nil {
+				fmt.Fprintf(os.Stderr, "Error writing formatted code to buffer: %v\n", err)
+				os.Exit(0)
+			}
+		} else {
+			fmt.Fprintf(os.Stderr, "Error formatting generated code: %v\n", err)
+			os.Exit(0)
+		}
+	}
+
 	if _, err := buf.WriteTo(out); err != nil {
 		fmt.Fprintf(os.Stderr, "Error writing template result to output: %v\n", err)
 		os.Exit(0)
@@ -140,9 +155,10 @@ func main() {
 
 func init() {
 	flag.StringVar(&output, "output", "-", "the output file")
-	flag.StringVar(&pkg, "pkg", "main", "the package of the output go file")
+	flag.StringVar(&pkg, "package", "main", "the package of the output go file")
 	flag.StringVar(&function, "function", "addFiles", "the function that will add the files to the fs")
-	flag.StringVar(&fs, "fs", "DefaultFS", "The fs object to be used. Will be created if different from the default")
+	flag.StringVar(&fs, "fs", "DefaultFS", "the fs object to be used. Will be created if different from the default")
+	flag.BoolVar(&doFormat, "format", false, "run the output go code through go/format")
 }
 
 const goTemplate = `package {{ .Pkg }}
