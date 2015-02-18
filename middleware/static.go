@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/urandom/webfw/context"
+	"github.com/urandom/webfw/fs"
 	"github.com/urandom/webfw/util"
 
 	"sort"
@@ -65,14 +66,12 @@ func init() {
 	}).Parse(fileListTemplate))
 }
 
-func (smw Static) Handler(ph http.Handler, c context.Context) http.Handler {
+func (mw Static) Handler(ph http.Handler, c context.Context) http.Handler {
 	var expires time.Duration
 
-	root := http.Dir(smw.Path)
-
-	if smw.Expires != "" {
+	if mw.Expires != "" {
 		var err error
-		expires, err = time.ParseDuration(smw.Expires)
+		expires, err = time.ParseDuration(mw.Expires)
 
 		if err != nil {
 			panic(err)
@@ -100,18 +99,18 @@ func (smw Static) Handler(ph http.Handler, c context.Context) http.Handler {
 			}
 			rpath := uriParts[0]
 
-			if smw.Prefix != "" {
-				if !strings.HasPrefix(rpath, smw.Prefix) {
+			if mw.Prefix != "" {
+				if !strings.HasPrefix(rpath, mw.Prefix) {
 					break
 				}
 
-				rpath = rpath[len(smw.Prefix):]
+				rpath = rpath[len(mw.Prefix):]
 				if rpath != "" && rpath[0] != '/' {
 					break
 				}
 			}
 
-			file, err := root.Open(rpath)
+			file, err := fs.DefaultFS.OpenRoot(mw.Path, rpath)
 			if err != nil {
 				break
 			}
@@ -129,21 +128,21 @@ func (smw Static) Handler(ph http.Handler, c context.Context) http.Handler {
 				}
 
 				index := "index.html"
-				if smw.Index != "" {
-					index = smw.Index
+				if mw.Index != "" {
+					index = mw.Index
 				}
 
 				ipath := path.Join(rpath, index)
 
-				file, err = root.Open(ipath)
+				file, err = fs.DefaultFS.OpenRoot(mw.Path, ipath)
 				if err == nil {
 					defer file.Close()
 					stat, err = file.Stat()
 				}
 
 				if err != nil || stat.IsDir() {
-					if smw.FileList {
-						file, err = root.Open(rpath)
+					if mw.FileList {
+						file, err := fs.DefaultFS.OpenRoot(mw.Path, rpath)
 						if err != nil {
 							break
 						}

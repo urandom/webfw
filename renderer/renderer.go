@@ -10,13 +10,16 @@
 package renderer
 
 import (
+	"errors"
+	"fmt"
 	"html/template"
 	"io"
-	"path"
+	"io/ioutil"
 	"strings"
 	"sync"
 
 	"github.com/urandom/webfw/context"
+	"github.com/urandom/webfw/fs"
 	"github.com/urandom/webfw/util"
 )
 
@@ -113,17 +116,13 @@ func (r *renderer) Render(w io.Writer, data RenderData, cdata context.ContextDat
 				return err
 			}
 
-			relativePaths := []string{}
-			for _, name := range names {
-				relativePaths = append(relativePaths, path.Join(r.path, name))
-			}
-
 			t, err = t.Clone()
 			if err != nil {
 				return err
 			}
 
-			t, err = t.ParseFiles(relativePaths...)
+			t, err = parseFiles(t, r.path, names...)
+
 			if err != nil {
 				return err
 			}
@@ -211,11 +210,34 @@ func (r *renderer) create(name string) (*template.Template, error) {
 		t.Funcs(fm)
 	}
 
-	if _, err := t.ParseFiles(path.Join(r.path, name)); err != nil {
+	if t, err := parseFiles(t, r.path, name); err == nil {
+		r.tmpls[name] = t
+	} else {
 		return nil, err
 	}
 
-	r.tmpls[name] = t
+	return t, nil
+}
+
+func parseFiles(t *template.Template, root string, names ...string) (*template.Template, error) {
+	for _, name := range names {
+		var tmpl *template.Template
+		if name == t.Name() {
+			tmpl = t
+		} else {
+			tmpl = t.New(name)
+		}
+
+		if file, err := fs.DefaultFS.OpenRoot(root, name); err == nil {
+			if b, err := ioutil.ReadAll(file); err == nil {
+				tmpl.Parse(string(b))
+			} else {
+				return nil, errors.New(fmt.Sprintf("Error reading '%s' with root '%s': %v\n", name, root, err))
+			}
+		} else {
+			return nil, errors.New(fmt.Sprintf("Error opening '%s' with root '%s': %v\n", name, root, err))
+		}
+	}
 
 	return t, nil
 }
