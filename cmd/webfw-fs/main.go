@@ -13,11 +13,12 @@ import (
 )
 
 var (
-	output   string
-	pkg      string
-	function string
-	fs       string
-	doFormat bool
+	output    string
+	pkg       string
+	function  string
+	fs        string
+	buildTags string
+	doFormat  bool
 
 	tmpl = template.Must(template.New("go-template").Parse(goTemplate))
 )
@@ -26,6 +27,7 @@ type templateData struct {
 	Pkg      string
 	Function string
 	FS       string
+	Tags     string
 
 	Files []File
 }
@@ -128,7 +130,7 @@ func main() {
 	}
 
 	buf := new(bytes.Buffer)
-	err := tmpl.Execute(buf, templateData{Pkg: pkg, Function: function, FS: fs, Files: files})
+	err := tmpl.Execute(buf, templateData{Pkg: pkg, Function: function, FS: fs, Tags: buildTags, Files: files})
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error executing template: %v\n", err)
 		os.Exit(0)
@@ -158,10 +160,14 @@ func init() {
 	flag.StringVar(&pkg, "package", "main", "the package of the output go file")
 	flag.StringVar(&function, "function", "addFiles", "the function that will add the files to the fs")
 	flag.StringVar(&fs, "fs", "DefaultFS", "the fs object to be used. Will be created if different from the default")
+	flag.StringVar(&buildTags, "build-tags", "", "optional build tags for the output code")
 	flag.BoolVar(&doFormat, "format", false, "run the output go code through go/format")
 }
 
-const goTemplate = `package {{ .Pkg }}
+const goTemplate = `
+{{ if .Tags }}// +build {{ .Tags }}
+{{ end }}
+package {{ .Pkg }}
 
 // DO NOT EDIT ** This file was generated with the webfw-fs tool ** DO NOT EDIT //
 
