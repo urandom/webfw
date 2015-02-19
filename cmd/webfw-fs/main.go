@@ -220,19 +220,13 @@ func parseInput(r *bufio.Reader) (args []string, err error) {
 			buf = buf[:index]
 		}
 
+		buf = bytes.TrimSpace(buf)
+
 		if len(buf) == 0 {
 			if end {
 				break
 			}
 			continue
-		}
-
-		if buf[len(buf)-1] == '\n' {
-			buf = buf[:len(buf)-1]
-		}
-
-		if buf[len(buf)-1] == '\r' {
-			buf = buf[:len(buf)-1]
 		}
 
 		args = append(args, string(buf))
