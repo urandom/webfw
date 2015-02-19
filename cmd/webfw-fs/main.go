@@ -1,10 +1,13 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
+	"errors"
 	"flag"
 	"fmt"
 	"go/format"
+	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -13,6 +16,7 @@ import (
 )
 
 var (
+	input     string
 	output    string
 	pkg       string
 	function  string
@@ -42,13 +46,49 @@ type File struct {
 
 func main() {
 	flag.Parse()
-	if flag.NArg() == 0 {
-		fmt.Fprintln(os.Stderr, "No input files/directories given")
-		os.Exit(0)
-	}
 
 	if pkg == "" {
 		fmt.Fprintln(os.Stderr, "No output file package given")
+		os.Exit(0)
+	}
+
+	if function == "" {
+		fmt.Fprintln(os.Stderr, "No output file function given")
+		os.Exit(0)
+	}
+
+	if fs == "" {
+		fmt.Fprintln(os.Stderr, "No output file FS given")
+		os.Exit(0)
+	}
+
+	var args []string
+	var err error
+
+	if input == "" {
+		args = flag.Args()
+	} else {
+		var in *os.File
+		if input == "-" {
+			in = os.Stdin
+		} else {
+			if in, err = os.Open(input); err != nil {
+				fmt.Fprintf(os.Stderr, "Error opening '%s': %v\n", input, err)
+				os.Exit(0)
+			}
+		}
+
+		r := bufio.NewReader(in)
+
+		args, err = parseInput(r)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error reading input '%s': %v\n", input, err)
+			os.Exit(0)
+		}
+	}
+
+	if len(args) == 0 {
+		fmt.Fprintln(os.Stderr, "No input files/directories given")
 		os.Exit(0)
 	}
 
@@ -57,7 +97,6 @@ func main() {
 	if output == "-" {
 		out = os.Stdout
 	} else {
-		var err error
 		if out, err = os.OpenFile(output, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0644); err != nil {
 			fmt.Fprintf(os.Stderr, "Error opening '%s' for writing: %v\n", output, err)
 			os.Exit(0)
@@ -68,7 +107,7 @@ func main() {
 
 	files := []File{}
 
-	for _, arg := range flag.Args() {
+	for _, arg := range args {
 		recursive := false
 		if strings.HasSuffix(arg, "/...") {
 			recursive = true
@@ -130,7 +169,7 @@ func main() {
 	}
 
 	buf := new(bytes.Buffer)
-	err := tmpl.Execute(buf, templateData{Pkg: pkg, Function: function, FS: fs, Tags: buildTags, Files: files})
+	err = tmpl.Execute(buf, templateData{Pkg: pkg, Function: function, FS: fs, Tags: buildTags, Files: files})
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error executing template: %v\n", err)
 		os.Exit(0)
@@ -156,12 +195,54 @@ func main() {
 }
 
 func init() {
+	flag.StringVar(&input, "input", "", "the input file. If omitted, any additional arguments will be used as input")
 	flag.StringVar(&output, "output", "-", "the output file")
 	flag.StringVar(&pkg, "package", "main", "the package of the output go file")
 	flag.StringVar(&function, "function", "addFiles", "the function that will add the files to the fs")
 	flag.StringVar(&fs, "fs", "DefaultFS", "the fs object to be used. Will be created if different from the default")
 	flag.StringVar(&buildTags, "build-tags", "", "optional build tags for the output code")
 	flag.BoolVar(&doFormat, "format", false, "run the output go code through go/format")
+}
+
+func parseInput(r *bufio.Reader) (args []string, err error) {
+	for {
+		buf, err := r.ReadSlice('\n')
+
+		end := false
+		if err == io.EOF {
+			end = true
+		} else if err != nil {
+			return args, errors.New(fmt.Sprintf("Error reading line '%s': %v\n", buf, err))
+		}
+
+		index := bytes.IndexByte(buf, '#')
+		if index != -1 {
+			buf = buf[:index]
+		}
+
+		if len(buf) == 0 {
+			if end {
+				break
+			}
+			continue
+		}
+
+		if buf[len(buf)-1] == '\n' {
+			buf = buf[:len(buf)-1]
+		}
+
+		if buf[len(buf)-1] == '\r' {
+			buf = buf[:len(buf)-1]
+		}
+
+		args = append(args, string(buf))
+
+		if end {
+			break
+		}
+	}
+
+	return
 }
 
 const goTemplate = `
