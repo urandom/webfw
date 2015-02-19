@@ -65,6 +65,8 @@ func main() {
 	var args []string
 	var err error
 
+	seen := make(map[string]bool)
+
 	if input == "" {
 		args = flag.Args()
 	} else {
@@ -108,6 +110,11 @@ func main() {
 	files := []File{}
 
 	for _, arg := range args {
+		if seen[arg] {
+			fmt.Fprintf(os.Stderr, "Input '%s' already processed. Skipping.\n", arg)
+		}
+		seen[arg] = true
+
 		recursive := false
 		if strings.HasSuffix(arg, "/...") {
 			recursive = true
