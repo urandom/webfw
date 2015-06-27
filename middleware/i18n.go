@@ -2,14 +2,16 @@ package middleware
 
 import (
 	"errors"
+	"fmt"
 	"html/template"
+	"io/ioutil"
 	"net/http"
-	"path/filepath"
 	"strings"
 	ttemplate "text/template"
 
 	"github.com/urandom/webfw"
 	"github.com/urandom/webfw/context"
+	"github.com/urandom/webfw/fs"
 	"github.com/urandom/webfw/util"
 
 	"github.com/nicksnyder/go-i18n/i18n"
@@ -65,7 +67,18 @@ type I18N struct {
 
 func (imw I18N) Handler(ph http.Handler, c context.Context) http.Handler {
 	for _, l := range imw.Languages {
-		i18n.MustLoadTranslationFile(filepath.Join(imw.Dir, l+".all.json"))
+		file, err := fs.DefaultFS.OpenRoot(imw.Dir, l+".all.json")
+		if err == nil {
+			var b []byte
+
+			if b, err = ioutil.ReadAll(file); err == nil {
+				err = i18n.ParseTranslationFileBytes(l+".all.json", b)
+			}
+		}
+
+		if err != nil {
+			panic(fmt.Sprintf("Error opening locale file '%s.all.json': %v\n", l, err))
+		}
 	}
 
 	renderer := webfw.GetRenderer(c)
