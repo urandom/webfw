@@ -28,6 +28,7 @@ type Renderer interface {
 	SetBaseName(string)
 	Funcs(template.FuncMap)
 	Delims(left, right string)
+	SkipCache(skip ...bool) bool
 	Render(w io.Writer, data RenderData, cdata context.ContextData, names ...string) error
 }
 
@@ -38,6 +39,7 @@ type renderer struct {
 	baseName   string
 	leftDelim  string
 	rightDelim string
+	skipCache  bool
 	funcMaps   []template.FuncMap
 }
 
@@ -75,6 +77,14 @@ func (r *renderer) Delims(left, right string) {
 // Funcs registers a template.FuncMap object all future templates
 func (r *renderer) Funcs(funcMap template.FuncMap) {
 	r.funcMaps = append(r.funcMaps, funcMap)
+}
+
+func (r *renderer) SkipCache(skip ...bool) bool {
+	if len(skip) > 0 {
+		r.skipCache = skip[0]
+	}
+
+	return r.skipCache
 }
 
 // Render executes the template chain, writing the output in the given
@@ -168,6 +178,10 @@ func (r *renderer) Render(w io.Writer, data RenderData, cdata context.ContextDat
 }
 
 func (r *renderer) get(name string) (*template.Template, bool) {
+	if r.skipCache {
+		return nil, false
+	}
+
 	r.mutex.RLock()
 	defer r.mutex.RUnlock()
 
@@ -177,6 +191,10 @@ func (r *renderer) get(name string) (*template.Template, bool) {
 }
 
 func (r *renderer) set(name string, t *template.Template) {
+	if r.skipCache {
+		return
+	}
+
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 
@@ -184,14 +202,16 @@ func (r *renderer) set(name string, t *template.Template) {
 }
 
 func (r *renderer) base() (*template.Template, error) {
-	r.mutex.RLock()
+	if !r.skipCache {
+		r.mutex.RLock()
 
-	if t, ok := r.tmpls[r.baseName]; ok {
+		if t, ok := r.tmpls[r.baseName]; ok {
+			r.mutex.RUnlock()
+			return t, nil
+		}
+
 		r.mutex.RUnlock()
-		return t, nil
 	}
-
-	r.mutex.RUnlock()
 	return r.create(r.baseName)
 }
 
@@ -211,7 +231,9 @@ func (r *renderer) create(name string) (*template.Template, error) {
 	}
 
 	if t, err := parseFiles(t, r.path, name); err == nil {
-		r.tmpls[name] = t
+		if !r.skipCache {
+			r.tmpls[name] = t
+		}
 	} else {
 		return nil, err
 	}
