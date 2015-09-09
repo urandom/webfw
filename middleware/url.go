@@ -42,7 +42,13 @@ type Url struct {
 
 func (mw Url) Handler(ph http.Handler, c context.Context) http.Handler {
 	renderer := webfw.GetRenderer(c)
-	renderer.Funcs(template.FuncMap{
+	renderer.Funcs(mw.TemplateFuncMap(c))
+
+	return ph
+}
+
+func (mw Url) TemplateFuncMap(c context.Context) template.FuncMap {
+	return template.FuncMap{
 		"url": func(data ...interface{}) (string, error) {
 			r, parts, err := handleParts(data)
 			if err != nil {
@@ -62,9 +68,7 @@ func (mw Url) Handler(ph http.Handler, c context.Context) http.Handler {
 
 			return LocalizedURL(c, r, mw.Pattern, lang, parts)
 		},
-	})
-
-	return ph
+	}
 }
 
 // The URL function provides the functionality of the url template functions
