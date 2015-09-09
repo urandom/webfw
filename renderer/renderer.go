@@ -251,6 +251,7 @@ func parseFiles(t *template.Template, root string, names ...string) (*template.T
 		}
 
 		if file, err := fs.DefaultFS.OpenRoot(root, name); err == nil {
+			defer file.Close()
 			if b, err := ioutil.ReadAll(file); err == nil {
 				tmpl.Parse(string(b))
 			} else {

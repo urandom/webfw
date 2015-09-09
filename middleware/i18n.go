@@ -37,7 +37,7 @@ however, if it has a path "/test/", the request will be:
 If the relative request path doesn't contain the language, the language stored
 in the session will be used, if one is present. Otherwise, it will fall back
 to the first one in the Accept-Language header, then to the LANG environment
-variable, tben to the LC_MESSAGES one, and finally to "en". If the request
+variable, then to the LC_MESSAGES one, and finally to "en". If the request
 path doesn't contain a language, the client will be redirected to the same
 path, including whatever fallback language is selected. Finally, the request
 path is modified so that subsequent middleware and the final handler do not
