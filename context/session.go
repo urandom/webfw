@@ -229,15 +229,17 @@ func (s *session) Write(w http.ResponseWriter) error {
 		return err
 	}
 
-	var cookie *http.Cookie
+	if w != nil {
+		var cookie *http.Cookie
 
-	if s.maxAge > 0 {
-		t := time.Unix(date, 0).Add(s.maxAge)
-		cookie = &http.Cookie{Name: s.cookieName, Value: val, Path: "/", MaxAge: int(s.maxAge.Seconds()), Expires: t}
-	} else {
-		cookie = &http.Cookie{Name: s.cookieName, Value: val, Path: "/"}
+		if s.maxAge > 0 {
+			t := time.Unix(date, 0).Add(s.maxAge)
+			cookie = &http.Cookie{Name: s.cookieName, Value: val, Path: "/", MaxAge: int(s.maxAge.Seconds()), Expires: t}
+		} else {
+			cookie = &http.Cookie{Name: s.cookieName, Value: val, Path: "/"}
+		}
+		http.SetCookie(w, cookie)
 	}
-	http.SetCookie(w, cookie)
 
 	fsMutex.Lock()
 	defer fsMutex.Unlock()
@@ -253,7 +255,10 @@ func (s *session) Write(w http.ResponseWriter) error {
 		return err
 	}
 
-	f.Write(buf.Bytes())
+	if _, err := f.Write(buf.Bytes()); err != nil {
+		return err
+	}
+
 	f.Close()
 
 	return nil
