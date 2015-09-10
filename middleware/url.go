@@ -89,7 +89,7 @@ func URL(c context.Context, r *http.Request, dispatcherPattern string, parts []s
 		base = dispatcherPattern[:len(dispatcherPattern)-1] + base
 	}
 
-	if base[len(base)-1] == '/' {
+	if len(base) > 1 && base[len(base)-1] == '/' {
 		base = base[:len(base)-1]
 	}
 	return base, nil
@@ -111,7 +111,7 @@ func LocalizedURL(c context.Context, r *http.Request, dispatcherPattern, languag
 		base = "/" + base
 	}
 
-	if base[len(base)-1] == '/' {
+	if len(base) > 1 && base[len(base)-1] == '/' {
 		base = base[:len(base)-1]
 	}
 	return base, nil
