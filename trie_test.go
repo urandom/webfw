@@ -316,7 +316,7 @@ func TestLookup(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if match, ok := trie.Lookup("/f/hello/tWorld", MethodAll); ok {
+	if match, ok := trie.Lookup("/f/hello/aWorld", MethodAll); ok {
 		if len(match.RouteMap) != 1 {
 			t.Fatal()
 		}
@@ -338,7 +338,7 @@ func TestLookup(t *testing.T) {
 				t.Fatal()
 			}
 
-			if match.Params["glob/conti:nuing"] != "tWorld" {
+			if match.Params["glob/conti:nuing"] != "aWorld" {
 				t.Fatal()
 			}
 		}
@@ -362,7 +362,7 @@ func TestLookup(t *testing.T) {
 				t.Fatal()
 			}
 
-			if match.Params["glob/conti:nuing"] != "tWorld" {
+			if match.Params["param2"] != "World" {
 				t.Fatal()
 			}
 		}

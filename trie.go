@@ -266,6 +266,10 @@ func (n *node) lookup(term string, params RouteParams) (*node, RouteParams, bool
 		}
 	}
 
+	if child, ok := n.children[head]; ok {
+		return child.lookup(tail, params)
+	}
+
 	for _, child := range n.children {
 		if child.nodeType == param || child.nodeType == glob {
 			if child.nodeType == param {
@@ -285,9 +289,6 @@ func (n *node) lookup(term string, params RouteParams) (*node, RouteParams, bool
 		}
 	}
 
-	if child, ok := n.children[head]; ok {
-		return child.lookup(tail, params)
-	}
 	return nil, params, false
 }
 
