@@ -45,6 +45,8 @@ func InitializeDefault(d *webfw.Dispatcher) {
 				MaxAge:          d.Config.Session.MaxAge,
 				CleanupInterval: d.Config.Session.CleanupInterval,
 				CleanupMaxAge:   d.Config.Session.CleanupMaxAge,
+				Pattern:         d.Pattern,
+				IgnoreURLPrefix: d.Config.Session.IgnoreURLPrefix,
 			})
 		case "I18N":
 			d.RegisterMiddleware(I18N{

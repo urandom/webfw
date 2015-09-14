@@ -5,6 +5,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/urandom/webfw"
@@ -37,6 +38,8 @@ type Session struct {
 	MaxAge          string
 	CleanupInterval string
 	CleanupMaxAge   string
+	Pattern         string
+	IgnoreURLPrefix []string
 
 	SessionGenerator context.SessionGenerator
 }
@@ -93,6 +96,33 @@ func (smw Session) Handler(ph http.Handler, c context.Context) http.Handler {
 	}
 
 	handler := func(w http.ResponseWriter, r *http.Request) {
+		uriParts := strings.SplitN(r.RequestURI, "?", 2)
+		if uriParts[0] == "" {
+			uriParts[0] = r.URL.Path
+		}
+
+		ignore := false
+		for _, prefix := range smw.IgnoreURLPrefix {
+			if prefix[0] == '/' {
+				prefix = prefix[1:]
+			}
+
+			if strings.HasPrefix(uriParts[0], smw.Pattern+prefix+"/") {
+				ignore = true
+				break
+			}
+
+			if uriParts[0] == smw.Pattern+prefix {
+				ignore = true
+				break
+			}
+		}
+
+		if ignore {
+			ph.ServeHTTP(w, r)
+			return
+		}
+
 		firstTimer := false
 		var sess context.Session
 
