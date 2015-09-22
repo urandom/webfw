@@ -3,6 +3,7 @@
 package webfw
 
 import (
+	"flag"
 	"fmt"
 	"net/http"
 )
@@ -18,6 +19,11 @@ type Server struct {
 	dispatchers map[string]*Dispatcher
 }
 
+var (
+	address string
+	port    int
+)
+
 // NewServer creates a server with an optional path to a configuration file.
 func NewServer(confpath ...string) Server {
 	conf, err := ReadConfig(confpath...)
@@ -31,13 +37,22 @@ func NewServer(confpath ...string) Server {
 
 // NewServerWithConfig creates a server with the given configuration.
 func NewServerWithConfig(conf Config) Server {
-	return Server{
+	s := Server{
 		Config:  conf,
 		Address: conf.Server.Address,
 		Port:    conf.Server.Port,
 
 		dispatchers: make(map[string]*Dispatcher),
 	}
+
+	if address != "" {
+		s.Address = address
+	}
+	if port > 0 {
+		s.Port = port
+	}
+
+	return s
 }
 
 // Dispatcher returns a dispatcher registered for a given base pattern.
@@ -72,4 +87,9 @@ func (s Server) ListenAndServe() error {
 	} else {
 		return http.ListenAndServe(addr, nil)
 	}
+}
+
+func init() {
+	flag.StringVar(&address, "address", "", "server address")
+	flag.IntVar(&port, "port", 0, "server port")
 }
