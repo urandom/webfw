@@ -107,7 +107,7 @@ func ParseConfig(cfg ...string) (Config, error) {
 func defaultConfig() (Config, error) {
 	var def Config
 
-	err := gcfg.ReadStringInto(&def, cfg)
+	err := gcfg.ReadStringInto(&def, DefaultCfg)
 
 	if err != nil {
 		return Config{}, err
@@ -116,8 +116,8 @@ func defaultConfig() (Config, error) {
 	return def, nil
 }
 
-// Default configuration:
-var cfg string = `
+// Default configuration
+var DefaultCfg string = `
 [server]
 	port = 8080
 	devel

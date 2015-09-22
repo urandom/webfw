@@ -18,8 +18,7 @@ type Server struct {
 	dispatchers map[string]*Dispatcher
 }
 
-// NewServer creates a server with an optional path to a
-// configuration file.
+// NewServer creates a server with an optional path to a configuration file.
 func NewServer(confpath ...string) Server {
 	conf, err := ReadConfig(confpath...)
 
@@ -27,6 +26,11 @@ func NewServer(confpath ...string) Server {
 		panic(err)
 	}
 
+	return NewServerWithConfig(conf)
+}
+
+// NewServerWithConfig creates a server with the given configuration.
+func NewServerWithConfig(conf Config) Server {
 	return Server{
 		Config:  conf,
 		Address: conf.Server.Address,
