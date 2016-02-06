@@ -148,7 +148,7 @@ func (imw I18N) Handler(ph http.Handler, c context.Context) http.Handler {
 		}
 
 		if !found {
-			fallback := webfw.GetFallbackLanguage(c, r)
+			fallback := webfw.GetFallbackLanguage(c, r, imw.FallbackLanguage)
 			index := strings.Index(fallback, "-")
 			short := fallback
 			if index > -1 {
@@ -167,17 +167,13 @@ func (imw I18N) Handler(ph http.Handler, c context.Context) http.Handler {
 				}
 			}
 
-			if !found && !foundShort {
-				c.Set(r, context.BaseCtxKey("lang"), "")
-				ph.ServeHTTP(w, r)
-				return
-			}
-
 			var language string
 			if found {
 				language = fallback
-			} else {
+			} else if foundShort {
 				language = short
+			} else {
+				language = imw.FallbackLanguage
 			}
 
 			url := imw.Pattern + language + uriParts[0][len(imw.Pattern)-1:]

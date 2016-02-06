@@ -102,7 +102,7 @@ var localeRegexp = regexp.MustCompile(`\.[\w\-]+$`)
 // GetFallbackLanguage tries to obtain a requested language via the session,
 // or the Accept-Language request header, or the LANG or LC_MESSAGES
 // environment variables
-func GetFallbackLanguage(c context.Context, r *http.Request) string {
+func GetFallbackLanguage(c context.Context, r *http.Request, fallback ...string) string {
 	if val, ok := c.Get(r, context.BaseCtxKey("session")); ok {
 		sess := val.(context.Session)
 
@@ -125,7 +125,11 @@ func GetFallbackLanguage(c context.Context, r *http.Request) string {
 	}
 
 	if language == "" {
-		language = "en"
+		if len(fallback) > 0 {
+			language = fallback[0]
+		} else {
+			language = "en"
+		}
 	} else {
 		langs := lng.Parse(language)
 		if len(langs) > 0 {
