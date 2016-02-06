@@ -59,10 +59,11 @@ as key-value tuples to be used for the message. The current language may be
 obtained using the ".base.lang" pipeline.
 */
 type I18N struct {
-	Languages       []string
-	Pattern         string
-	Dir             string
-	IgnoreURLPrefix []string
+	Languages        []string
+	Pattern          string
+	Dir              string
+	IgnoreURLPrefix  []string
+	FallbackLanguage string
 }
 
 func (imw I18N) Handler(ph http.Handler, c context.Context) http.Handler {
@@ -201,12 +202,12 @@ func (imw I18N) TemplateFuncMap() template.FuncMap {
 			if len(imw.Languages) == 0 {
 				return template.HTML(message), nil
 			}
-			return t(message, lang, data...)
+			return t(message, lang, imw.FallbackLanguage, data...)
 		},
 	}
 }
 
-func t(message, lang string, data ...interface{}) (template.HTML, error) {
+func t(message, lang, fallback string, data ...interface{}) (template.HTML, error) {
 	var count interface{}
 	hasCount := false
 
@@ -225,7 +226,7 @@ func t(message, lang string, data ...interface{}) (template.HTML, error) {
 		dataMap[data[i].(string)] = data[i+1]
 	}
 
-	T, err := i18n.Tfunc(lang, "en-US")
+	T, err := i18n.Tfunc(lang, fallback)
 
 	if err != nil {
 		return "", err

@@ -50,10 +50,11 @@ func InitializeDefault(d *webfw.Dispatcher) {
 			})
 		case "I18N":
 			d.RegisterMiddleware(I18N{
-				Dir:             d.Config.I18n.Dir,
-				Pattern:         d.Pattern,
-				Languages:       d.Config.I18n.Languages,
-				IgnoreURLPrefix: d.Config.I18n.IgnoreURLPrefix,
+				Dir:              d.Config.I18n.Dir,
+				Pattern:          d.Pattern,
+				Languages:        d.Config.I18n.Languages,
+				FallbackLanguage: d.Config.I18n.FallbackLanguage,
+				IgnoreURLPrefix:  d.Config.I18n.IgnoreURLPrefix,
 			})
 		case "Url":
 			d.RegisterMiddleware(Url{

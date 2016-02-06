@@ -38,9 +38,10 @@ type Config struct {
 		IgnoreURLPrefix []string `gcfg:"ignore-url-prefix"`
 	}
 	I18n struct {
-		Dir             string
-		Languages       []string `gcfg:"language"`
-		IgnoreURLPrefix []string `gcfg:"ignore-url-prefix"`
+		Dir              string
+		Languages        []string `gcfg:"language"`
+		FallbackLanguage string   `gcfg:"fallback-language"`
+		IgnoreURLPrefix  []string `gcfg:"ignore-url-prefix"`
 	}
 	Sitemap struct {
 		LocPrefix        string `gcfg:"location-prefix"`
@@ -151,6 +152,7 @@ var DefaultCfg string = `
 
 [i18n]
 	dir = locale
+	fallback-language = en
 [sitemap]
 	relative-location = "sitemap.xml"
 `
