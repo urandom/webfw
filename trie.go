@@ -44,7 +44,7 @@ const (
 	glob
 )
 
-var methods []Method = []Method{MethodGet, MethodPost, MethodPut, MethodDelete}
+var methods []Method = []Method{MethodGet, MethodPost, MethodPut, MethodDelete, MethodPatch, MethodHead}
 
 // NewTrie creates a new Route trie, for efficient lookup of routes and names.
 func NewTrie() *Trie {

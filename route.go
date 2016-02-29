@@ -19,7 +19,8 @@ const (
 	MethodPut
 	MethodDelete
 	MethodPatch
-	MethodAll Method = MethodGet | MethodPost | MethodPut | MethodDelete | MethodPatch
+	MethodHead
+	MethodAll Method = MethodGet | MethodPost | MethodPut | MethodDelete | MethodPatch | MethodHead
 )
 
 var MethodNames map[Method]string = map[Method]string{
@@ -28,6 +29,7 @@ var MethodNames map[Method]string = map[Method]string{
 	MethodPut:    "PUT",
 	MethodDelete: "DELETE",
 	MethodPatch:  "PATCH",
+	MethodHead:   "HEAD",
 }
 
 var ReverseMethodNames = map[string]Method{
@@ -36,4 +38,5 @@ var ReverseMethodNames = map[string]Method{
 	"PUT":    MethodPut,
 	"DELETE": MethodDelete,
 	"PATCH":  MethodPatch,
+	"HEAD":   MethodHead,
 }
